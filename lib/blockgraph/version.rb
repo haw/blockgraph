@@ -1,3 +1,3 @@
-module Blockgraph
+module BlockGraph
   VERSION = "0.1.0"
 end

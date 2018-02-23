@@ -1,5 +1,5 @@
 require "blockgraph/version"
 
-module Blockgraph
-  # Your code goes here...
+module BlockGraph
+  autoload :GraphDB, 'blockgraph/graphdb'
 end

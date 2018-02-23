@@ -5,7 +5,7 @@ require "blockgraph/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "blockgraph"
-  spec.version       = Blockgraph::VERSION
+  spec.version       = BlockGraph::VERSION
   spec.authors       = ["Jun Okumura"]
   spec.email         = ["okumura@haw.co.jp"]
 
