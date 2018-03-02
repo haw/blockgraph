@@ -1,0 +1,12 @@
+blockgraph:
+  bitcoin:
+    network: 'testnet'
+    out_dir: '/tmp/blockgraph/parser'
+    coin_dir: '~/Library/Application Support/Bitcoin/testnet3'
+    sleep_interval: 600
+    min_block_confirmation: 2
+  neo4j:
+    server: 'http://localhost:7475'
+    basic_auth:
+      username: 'neo4j'
+      password: 'password'

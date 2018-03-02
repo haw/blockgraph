@@ -11,4 +11,26 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  # for thor command.
+  def capture(stream)
+    begin
+      stream = stream.to_s
+      eval "$#{stream} = StringIO.new"
+      yield
+      result = eval("$#{stream}").string
+    ensure
+      eval("$#{stream} = #{stream.upcase}")
+    end
+    result
+  end
+
+  config.after(:each) do |example|
+    if example.metadata[:cli]
+      Dir.glob(["*.pid", "*.log"]).each do |f|
+        File.delete f
+      end
+    else
+    end
+  end
 end
