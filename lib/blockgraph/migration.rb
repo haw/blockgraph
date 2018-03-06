@@ -1,4 +1,4 @@
-require 'active_support/all'
+require 'base'
 
 module BlockGraph
 

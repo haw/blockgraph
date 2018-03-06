@@ -1,9 +1,7 @@
 require 'thor'
+require 'base'
 require 'json'
-require 'yaml'
-require 'active_support/all'
 require 'daemon_spawn'
-require 'blockgraph'
 
 module BlockGraph
   class BlockGraphDaemon < DaemonSpawn::Base
