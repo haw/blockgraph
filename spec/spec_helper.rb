@@ -1,5 +1,7 @@
 require "bundler/setup"
 require "base"
+require "database_cleaner"
+require "neo4j"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -25,12 +27,26 @@ RSpec.configure do |config|
     result
   end
 
+  DatabaseCleaner[:neo4j, connection: {type: :server_db, path: 'http://localhost:7475'}].strategy = :transaction
+
+  config.before(:each) do |example|
+    unless example.metadata[:cli]
+      DatabaseCleaner.start
+      BlockGraph.configuration
+    end
+  end
+
   config.after(:each) do |example|
     if example.metadata[:cli]
       Dir.glob(["*.pid", "*.log"]).each do |f|
         File.delete f
       end
     else
+      DatabaseCleaner.clean_with(:truncation)
     end
+  end
+
+  def test_configuration
+    BlockGraph::Parser::Configuration.new("#{Dir.tmpdir}/blockgraph", File.join(File.dirname(__FILE__), 'fixtures/regtest'))
   end
 end

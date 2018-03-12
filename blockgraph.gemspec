@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "activesupport", ">= 4.0.2"
   spec.add_development_dependency "database_cleaner"
   spec.add_development_dependency "octorelease"
+  spec.add_development_dependency "parallel", "~> 1.12.1"
 end
