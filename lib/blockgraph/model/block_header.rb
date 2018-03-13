@@ -4,7 +4,6 @@ module BlockGraph
 
       property :block_hash
       property :version, type: Integer
-      property :prev_id
       property :merkle_root
       property :time, type: Integer
       property :bits
@@ -24,13 +23,11 @@ module BlockGraph
       validates :block_hash, :presence => true
       validates :height, :presence => true
 
-      after_create :chain_previous_block
-
       scope :latest, -> {order(height: 'DESC')}
       scope :with_height, -> (height){where(height: height)}
 
       def self.create_from_blocks(blocks)
-        prev_uuid = nil
+        prev = nil
         blocks.each_with_index do |(h, b), i|
           block = BlockHeader.new
           block.block_hash = b.block_hash
@@ -44,10 +41,10 @@ module BlockGraph
           block.tx_num = b.tx_count
           block.input_num = b.input_count
           block.output_num = b.output_count
-          block.prev_id = prev_uuid
           block.file_num = b.file_num
+          block.previous_block = prev
           block.save!
-          prev_uuid = block.uuid
+          prev = block
           print "\r#{(((i + 1) / blocks.size.to_f) * 100).to_i}% completed."
         end
         puts
@@ -55,15 +52,6 @@ module BlockGraph
 
       def genesis_block?
         Bitcoin.chain_params.genesis_block.header.hash == self.block_hash
-      end
-
-      private
-
-      def chain_previous_block
-        unless self.prev_id.nil?
-          self.previous_block = BlockHeader.where(uuid: self.prev_id).first
-          save!
-        end
       end
 
     end
