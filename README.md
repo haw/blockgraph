@@ -52,6 +52,33 @@ $ rake neo4j:config[test,7475]
 $ neo4j:start[test]
 ```
 
+### create the indexes
+
+```
+$ rake neo4j:generate_schema_migration[constraint,BlockGraph::Model::ActiveNodeBase,uuid]
+$ rake neo4j:generate_schema_migration[index,BlockGraph::Model::BlockHeader,height]
+$ rake neo4j:generate_schema_migration[index,BlockGraph::Model::BlockHeader,block_hash]
+```
+
+### migrate database
+
+You need to migrate your database.
+Run the command below:
+
+```
+$ rake neo4j:migrate
+```
+
+Did you have error?
+Please try again below:
+
+```
+$ rake neo4j:migrate NEO4J_URL=[YOUR NEO4J URL]
+
+# e.g.: Execute the below when testing setup. 
+$ rake neo4j:migrate NEO4J_URL=http://localhost:7475
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/blockgraph. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
