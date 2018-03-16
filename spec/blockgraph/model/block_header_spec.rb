@@ -42,7 +42,6 @@ RSpec.describe BlockGraph::Model::BlockHeader do
     it 'should set property' do
       BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
       block = BlockGraph::Model::BlockHeader.latest.first
-      prev = BlockGraph::Model::BlockHeader.latest[1]
       expect(block.block_hash).to eq '281dcd1e9124deef18140b754eab0550c46d6bd55e815415266c89d8faaf1f2d'.rhex
       expect(block.version).to eq 536870912
       expect(block.previous_block.block_hash.rhex).to eq '3c08bd4584e4c18d19eaacc7fd8d4dc43f37e0f8baa364995e4ebf0594298699'
