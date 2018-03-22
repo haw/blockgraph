@@ -99,10 +99,15 @@ module BlockGraph
       # parse loaded Chain Index
       def self.parse_from_neo4j(config)
         chain_index = self.new(config)
-        block_headers = BlockGraph::Model::BlockHeader.order(height: :asc)
+        block_headers = BlockGraph::Model::BlockHeader.all.oldest
         block_headers.each do |block|
+          txes = []
           header = Bitcoin::BlockHeader.new(block.version, (block.genesis_block? ? Bitcoin.chain_params.genesis_block.header.prev_hash : block.previous_block.block_hash), block.merkle_root, block.time, block.bits, block.nonce)
-          info = BlockGraph::Parser::BlockInfo.new(header, block.size, block.tx_num, block.input_num, block.output_num, block.file_num)
+          block.transactions.reverse_each do |tx|
+            txes << Bitcoin::Tx.parse_from_payload(tx.to_payload)
+          end
+          info = BlockGraph::Parser::BlockInfo.new(header, block.size, txes, block.tx_num, block.input_num, block.output_num, block.file_num)
+          info.height = block.height
           chain_index.block_list[info.block_hash] = info
           chain_index.old_chain = chain_index.newest_block = info
         end

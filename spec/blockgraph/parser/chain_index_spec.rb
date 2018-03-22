@@ -27,5 +27,31 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
     end
 
   end
-  
+
+  describe '#parse_from_neo4j' do
+    before do
+      index = BlockGraph::Parser::ChainIndex.new(test_configuration)
+      index.load
+      BlockGraph::Model::BlockHeader.create_from_blocks(index.blocks_to_add)
+      BlockGraph::Model::BlockHeader.latest.first
+    end
+
+    it 'should restore objects' do
+      index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(test_configuration)
+      expect(index.newest_block.block_hash).to eq('281dcd1e9124deef18140b754eab0550c46d6bd55e815415266c89d8faaf1f2d'.rhex)
+      expect(index.newest_block.tx_count).to eq(4)
+      expect(index.newest_block.input_count).to eq(3) # not count coinbase
+      expect(index.newest_block.output_count).to eq(8)
+      expect(index.newest_block.size).to eq(870)
+      expect(index.newest_block.file_num).to eq(0)
+      expect(index.newest_block.height).to eq(102)
+      txes = index.newest_block.transactions
+      expect(txes.length).to eq(4)
+      expect(txes[-1].txid).to eq('4dbea7be72e12f0c71634211c035cc800dc7aefe02994d6e97761cf817ae52b7')
+      expect(txes[-1].version).to eq(2)
+      expect(txes[-1].lock_time).to eq(101)
+      expect(txes[-1].inputs.length).to eq(1)
+      expect(txes[-1].outputs.length).to eq(2)
+    end
+  end
 end
