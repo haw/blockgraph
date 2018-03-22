@@ -33,6 +33,10 @@ RSpec.configure do |config|
     unless example.metadata[:cli]
       DatabaseCleaner.start
       BlockGraph.configuration
+      config = YAML.load_file(File.join(File.dirname(__FILE__), "fixtures/default_config.yml")).deep_symbolize_keys
+      config = config[:blockgraph]
+      neo4j_adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(config[:neo4j][:server], {basic_auth: config[:neo4j][:basic_auth], initialize: {request: {timeout: 600, open_timeout: 2}}})
+      Neo4j::ActiveBase.on_establish_session { Neo4j::Core::CypherSession.new(neo4j_adaptor) }
     end
   end
 

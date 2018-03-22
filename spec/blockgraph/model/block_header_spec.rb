@@ -2,13 +2,6 @@ require 'spec_helper'
 
 RSpec.describe BlockGraph::Model::BlockHeader do
   describe 'create_from_block_height' do
-    before do
-      config = YAML.load_file(File.join(File.dirname(__FILE__), "/../../fixtures/default_config.yml")).deep_symbolize_keys
-      config = config[:blockgraph]
-      neo4j_adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(config[:neo4j][:server], {basic_auth: config[:neo4j][:basic_auth], initialize: {request: {timeout: 600, open_timeout: 2}}})
-      Neo4j::ActiveBase.on_establish_session { Neo4j::Core::CypherSession.new(neo4j_adaptor) }
-    end
-
     subject(:blocks) {
       index = BlockGraph::Parser::ChainIndex.new(test_configuration)
       index.load
@@ -55,6 +48,35 @@ RSpec.describe BlockGraph::Model::BlockHeader do
       expect(block.tx_num).to eq 4
       expect(block.input_num).to eq 3
       expect(block.output_num).to eq 8
+    end
+
+    it 'should set transactions' do
+      BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
+      block = BlockGraph::Model::BlockHeader.latest.first
+      expect(block.transactions.count).to eq block.tx_num
+      expect(block.transactions).to contain_exactly(
+                                                     have_attributes(txid: '30a1883603b50cae28dcf3f3b235d14c446c42088f9bbf6515e64d13d40235a2'),
+                                                     have_attributes(txid: 'a7296d4e31cd08cc52f51280bf9b88e1da5a6becf5a7a504c7929d55d8a98a13'),
+                                                     have_attributes(txid: 'c3aecbcad8f901dbb501f00be072afb7df8321b86b608f8afc55d76e207742a2'),
+                                                     have_attributes(txid: '4dbea7be72e12f0c71634211c035cc800dc7aefe02994d6e97761cf817ae52b7')
+                                                 )
+      expect(block.transactions).to contain_exactly(
+                                        have_attributes(version: 2),
+                                        have_attributes(version: 2),
+                                        have_attributes(version: 2),
+                                        have_attributes(version: 2)
+                                        )
+      expect(block.transactions).to contain_exactly(
+                                        have_attributes(lock_time: 0),
+                                        have_attributes(lock_time: 101),
+                                        have_attributes(lock_time: 101),
+                                        have_attributes(lock_time: 101)
+                                        )
+      target = block.transactions.find{|tx| tx.txid == '4dbea7be72e12f0c71634211c035cc800dc7aefe02994d6e97761cf817ae52b7'}
+      expect(target.txid).to eq '4dbea7be72e12f0c71634211c035cc800dc7aefe02994d6e97761cf817ae52b7'
+      expect(target.inputs.length).to eq 1
+      expect(target.inputs[0].txid).to eq 'a7296d4e31cd08cc52f51280bf9b88e1da5a6becf5a7a504c7929d55d8a98a13'
+      expect(target.outputs.length).to eq 2
     end
   end
 
