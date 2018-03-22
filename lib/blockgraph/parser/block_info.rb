@@ -8,6 +8,7 @@ module BlockGraph
       attr_accessor :header
       attr_accessor :height # height of the entry in the chain. The genesis block has height 0
       attr_accessor :size
+      attr_accessor :transactions
       attr_accessor :tx_count # Number of transactions in this block.
       attr_accessor :input_count
       attr_accessor :output_count
@@ -15,10 +16,11 @@ module BlockGraph
       # @param [Bitcoin::BlockHeader] header the block
       # @param [Integer] file_num Which  file this block is stored in (blk?????.dat)
       # @param [Integer] file_pos Byte offset within blk?????.dat where this block's data is stored
-      def initialize(header, size, tx_count, tx_in, tx_out, file_num)
+      def initialize(header, size, transactions, tx_count, tx_in, tx_out, file_num)
         @block_hash = header.hash
         @header = header
         @size = size
+        @transactions = transactions
         @tx_count = tx_count
         @input_count = tx_in
         @output_count = tx_out
@@ -30,13 +32,14 @@ module BlockGraph
         header = Bitcoin::BlockHeader.parse_from_payload(buf.read(80))
         tx_in = tx_out = 0
         tx_count = Bitcoin.unpack_var_int_from_io(buf)
+        txes = []
         tx_count.times do
-          in_count, out_count = parse_tx_header(buf)
-          tx_in += in_count
-          tx_out += out_count
+          txes << Bitcoin::Tx.parse_from_payload(buf)
+          tx_in += txes[-1].inputs.size
+          tx_out += txes[-1].outputs.size
         end
         tx_in -= 1 # remove coinbase
-        self.new(header, size, tx_count, tx_in, tx_out, file_num)
+        self.new(header, size, txes, tx_count, tx_in, tx_out, file_num)
       end
 
       # parse BlockInfo data from io.

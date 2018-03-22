@@ -15,13 +15,14 @@ module BlockGraph
       property :input_num, type: Integer
       property :output_num, type: Integer
 
-      # has_many :in, :transactions, origin: :block, model_class: 'BlockGraph::Model::Transaction', dependent: :destroy
+      has_many :in, :transactions, origin: :block, model_class: 'BlockGraph::Model::Transaction', dependent: :destroy
       has_one :out, :previous_block, type: :previous_block, model_class: 'BlockGraph::Model::BlockHeader'
 
       validates :block_hash, :presence => true
       validates :height, :presence => true
 
       scope :latest, -> {order(height: 'DESC')}
+      scope :oldest, -> {order(height: :asc)}
       scope :with_height, -> (height){where(height: height)}
 
       def self.create_from_blocks(blocks)
@@ -41,6 +42,12 @@ module BlockGraph
           block.output_num = b.output_count
           block.file_num = b.file_num
           block.previous_block = prev
+          block.save!
+          unless block.genesis_block?
+            b.transactions.each do |tx|
+              block.transactions << BlockGraph::Model::Transaction.create_from_tx(tx)
+            end
+          end
           block.save!
           prev = block
           print "\r#{(((i + 1) / blocks.size.to_f) * 100).to_i}% completed."
