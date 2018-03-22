@@ -12,7 +12,7 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
     context 'load file' do
       subject {
         index = BlockGraph::Parser::ChainIndex.new(test_configuration)
-        index.load
+        index.update
         index
       }
       it 'should parse block' do
@@ -31,7 +31,7 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
   describe '#parse_from_neo4j' do
     before do
       index = BlockGraph::Parser::ChainIndex.new(test_configuration)
-      index.load
+      index.update
       BlockGraph::Model::BlockHeader.create_from_blocks(index.blocks_to_add)
       BlockGraph::Model::BlockHeader.latest.first
     end

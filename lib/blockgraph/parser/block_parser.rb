@@ -10,7 +10,7 @@ module BlockGraph
 
       def update_chain
         chain_index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(configuration)
-        chain_index.load
+        chain_index.update
         blocks = chain_index.blocks_to_add
         raise BlockGraph::Parser::Error.new('{"code"=>-8, "message"=>"Block height out of range"}') if blocks.blank?
         blocks

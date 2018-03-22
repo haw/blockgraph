@@ -12,7 +12,7 @@ module BlockGraph
         @block_list = {}
       end
 
-      def load
+      def update
         file_num = 0
         file_pos = 0
 

@@ -4,13 +4,13 @@ RSpec.describe BlockGraph::Model::BlockHeader do
   describe 'create_from_block_height' do
     subject(:blocks) {
       index = BlockGraph::Parser::ChainIndex.new(test_configuration)
-      index.load
+      index.update
       index.blocks_to_add
     }
 
     subject(:added_blocks) {
       index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(test_configuration)
-      index.load
+      index.update
       index.blocks_to_add
     }
 
