@@ -14,8 +14,6 @@ module BlockGraph
       property :tx_num, type: Integer
       property :input_num, type: Integer
       property :output_num, type: Integer
-      property :created_at
-      property :updated_at
 
       # has_many :in, :transactions, origin: :block, model_class: 'BlockGraph::Model::Transaction', dependent: :destroy
       has_one :out, :previous_block, type: :previous_block, model_class: 'BlockGraph::Model::BlockHeader'
