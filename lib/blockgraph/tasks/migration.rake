@@ -1,6 +1,12 @@
 require 'base'
 
-namespace :b2g do
+namespace :bg do
+  desc 'Import specified block to neo4j database.'
+  task :import, [:config_path] do |task, args|
+    puts "import blocks."
+    get_migration(args.config_path).run
+  end
+
   desc 'Import specified block to neo4j database.'
   task :import_block, [:block_height,:config_path] do |task, args|
     puts "import #{args.block_height} block."
@@ -34,7 +40,7 @@ namespace :b2g do
     target_block_height = args.block_height.to_i
     puts "remove_until_block down to #{target_block_height}"
     migration = get_migration(args.config_path)
-    current_height = Graphdb::Model::Block.latest.first.height
+    current_height = BlockGraph::Model::BlockHeader.latest.first.height
     current_height.downto(target_block_height) do |height|
       migration.remove_block(height)
     end
@@ -47,7 +53,7 @@ namespace :b2g do
 
   private
   def get_migration(config_path)
-    config = YAML.load(File.read(config_path)).deep_symbolize_keys[:bitcoin2graphdb]
-    Bitcoin2Graphdb::Migration.new(config)
+    config = YAML.load(File.read(config_path)).deep_symbolize_keys[:blockgraph]
+    BlockGraph::Migration.new(config)
   end
 end
