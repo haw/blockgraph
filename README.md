@@ -49,7 +49,7 @@ $ rake neo4j:config[test,7475]
 ### start test database
 
 ```
-$ neo4j:start[test]
+$ rake neo4j:start[test]
 ```
 
 ### create the indexes
