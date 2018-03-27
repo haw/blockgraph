@@ -9,7 +9,7 @@ RSpec.describe BlockGraph::CLI do
       expect(content).to match(/BlockGraphDaemon started./m)
     end
 
-    it "use -p or --pid option, create <pidfile>." do
+    it "use -p option, create <pidfile>." do
       args = ["start", "-c", "spec/fixtures/default_config.yml"]
       args << "-p"
       args << "foo.pid"
@@ -17,7 +17,9 @@ RSpec.describe BlockGraph::CLI do
         capture(:stdout) { BlockGraph::CLI.start(args) }
         sleep 3
       }.to change { File.exist?("./foo.pid") }.from(false).to be_truthy
+    end
 
+    it "use --pid option, create <pidfile>." do
       args = ["start", "-c", "spec/fixtures/default_config.yml"]
       args << "--pid"
       args << "bar.pid"
@@ -27,7 +29,7 @@ RSpec.describe BlockGraph::CLI do
       }.to change { File.exist?("./bar.pid") }.from(false).to be_truthy
     end
 
-    it "use -l or --log option, create <logfile>." do
+    it "use -l option, create <logfile>." do
       args = ["start", "-c", "spec/fixtures/default_config.yml"]
       args << "-l"
       args << "foo.log"
@@ -35,7 +37,9 @@ RSpec.describe BlockGraph::CLI do
         capture(:stdout) { BlockGraph::CLI.start(args) }
         sleep 3
       }.to change { File.exist?("./foo.log") }.from(false).to be_truthy
+    end
 
+    it "use --log option, create <logfile>." do
       args = ["start", "-c", "spec/fixtures/default_config.yml"]
       args << "--log=bar.log"
       expect {
