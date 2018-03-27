@@ -16,11 +16,11 @@ module BlockGraph
         file_num = 0
         file_pos = 0
 
-        latest_block = BlockGraph::Model::BlockHeader.last
+        latest_block = BlockGraph::Model::BlockHeader.latest.first
 
         unless latest_block.blank?
           file_num = latest_block.file_num
-          file_pos = BlockGraph::Model::BlockHeader.where(file_num: file_num).reduce(0){|sum, bi| sum += bi.size}
+          file_pos = BlockGraph::Model::BlockHeader.where(file_num: file_num).reduce(0){|sum, bh| sum += (bh.size + 8)}
         end
 
         max_file_num = max_block_file_num
