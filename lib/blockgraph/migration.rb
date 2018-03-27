@@ -25,23 +25,29 @@ module BlockGraph
     def run
       loop {
         puts "coming soon start migration. #{Time.now}"
-        Neo4j::ActiveBase.run_transaction do |tx|
-          begin
-            blocks = parser.update_chain
-            puts "start migration for block height #{blocks[0][1].height} to #{blocks[-1][1].height}. #{Time.now}"
-            BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
-            @block_height = blocks[-1][1].height
-          rescue BlockGraph::Parser::Error => e
-            if e.message == '{"code"=>-8, "message"=>"Block height out of range"}'
-              puts "Block height out of range. sleep #{@sleep_interval} seconds."
-              return
-              sleep @sleep_interval
-            else
-              tx.failure
-              raise e
+        begin
+          blocks = parser.update_chain
+          blocks.each do |(h, block)|
+            puts "start migration for block height #{block.height}. #{Time.now}"
+            Neo4j::ActiveBase.run_transaction do |tx|
+              begin
+                BlockGraph::Model::BlockHeader.create_from_blocks(block)
+                @block_height = blocks[-1][1].height
+              rescue => e
+                tx.failure
+                raise e
+              end
             end
           end
+        rescue BlockGraph::Parser::Error => e
+          if e.message == '{"code"=>-8, "message"=>"Block height out of range"}'
+            puts "Block height out of range. sleep #{@sleep_interval} seconds."
+            sleep @sleep_interval
+          else
+            raise e
+          end
         end
+        puts
         puts "end migration for block height #{@block_height}. #{Time.now}"
       }
     end

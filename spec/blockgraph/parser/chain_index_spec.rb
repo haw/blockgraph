@@ -32,8 +32,9 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
     before do
       index = BlockGraph::Parser::ChainIndex.new(test_configuration)
       index.update
-      BlockGraph::Model::BlockHeader.create_from_blocks(index.blocks_to_add)
-      BlockGraph::Model::BlockHeader.latest.first
+      index.blocks_to_add.each do |(h, block)|
+        BlockGraph::Model::BlockHeader.create_from_blocks(block)
+      end
     end
 
     it 'should restore objects' do

@@ -25,34 +25,28 @@ module BlockGraph
       scope :oldest, -> {order(height: :asc)}
       scope :with_height, -> (height){where(height: height)}
 
-      def self.create_from_blocks(blocks)
-        prev = nil
-        blocks.each_with_index do |(h, b), i|
-          block = BlockHeader.new
-          block.block_hash = b.block_hash
-          block.version = b.header.version
-          block.merkle_root = b.header.merkle_root
-          block.time = b.header.time
-          block.bits = b.header.bits
-          block.nonce = b.header.nonce
-          block.size = b.size
-          block.height = b.height
-          block.tx_num = b.tx_count
-          block.input_num = b.input_count
-          block.output_num = b.output_count
-          block.file_num = b.file_num
-          block.previous_block = prev
-          block.save!
-          unless block.genesis_block?
-            b.transactions.each do |tx|
-              block.transactions << BlockGraph::Model::Transaction.create_from_tx(tx)
-            end
+      def self.create_from_blocks(block)
+        bh = BlockHeader.new
+        bh.block_hash = block.block_hash
+        bh.version = block.header.version
+        bh.merkle_root = block.header.merkle_root
+        bh.time = block.header.time
+        bh.bits = block.header.bits
+        bh.nonce = block.header.nonce
+        bh.size = block.size
+        bh.height = block.height
+        bh.tx_num = block.tx_count
+        bh.input_num = block.input_count
+        bh.output_num = block.output_count
+        bh.file_num = block.file_num
+        bh.previous_block = self.find_by(block_hash: block.header.prev_hash)
+        bh.save!
+        unless bh.genesis_block?
+          block.transactions.each do |tx|
+            bh.transactions << BlockGraph::Model::Transaction.create_from_tx(tx)
           end
-          block.save!
-          prev = block
-          print "\r#{(((i + 1) / blocks.size.to_f) * 100).to_i}% completed."
         end
-        puts
+        bh.save!
       end
 
       def genesis_block?

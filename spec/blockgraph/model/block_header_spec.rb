@@ -14,26 +14,29 @@ RSpec.describe BlockGraph::Model::BlockHeader do
       index.blocks_to_add
     }
 
+    before do
+      blocks.each do |(h, block)|
+        BlockGraph::Model::BlockHeader.create_from_blocks(block)
+      end
+    end
+
     it 'should create block.' do
-      expect{
-        BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
-      }.to change{BlockGraph::Model::BlockHeader.count}.by(103) # include genesis block
+      expect(BlockGraph::Model::BlockHeader.count).to eq (103) # include genesis block
     end
 
     it 'should set previous block' do
-      BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
       expect(BlockGraph::Model::BlockHeader.latest.first.previous_block.height).to eq 101
     end
 
     it 'should create new block. when some block header exist.' do
-      BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
       expect{
-        BlockGraph::Model::BlockHeader.create_from_blocks(added_blocks)
+        added_blocks.each do |(h, block)|
+          BlockGraph::Model::BlockHeader.create_from_blocks(block)
+        end
       }.to change{BlockGraph::Model::BlockHeader.count}.by(0)
     end
 
     it 'should set property' do
-      BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
       block = BlockGraph::Model::BlockHeader.latest.first
       expect(block.block_hash).to eq '281dcd1e9124deef18140b754eab0550c46d6bd55e815415266c89d8faaf1f2d'.rhex
       expect(block.version).to eq 536870912
@@ -51,7 +54,6 @@ RSpec.describe BlockGraph::Model::BlockHeader do
     end
 
     it 'should set transactions' do
-      BlockGraph::Model::BlockHeader.create_from_blocks(blocks)
       block = BlockGraph::Model::BlockHeader.latest.first
       expect(block.transactions.count).to eq block.tx_num
       expect(block.transactions).to contain_exactly(
