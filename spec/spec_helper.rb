@@ -1,6 +1,5 @@
 require "bundler/setup"
 require "base"
-require "database_cleaner"
 require "neo4j"
 
 RSpec.configure do |config|
@@ -27,16 +26,11 @@ RSpec.configure do |config|
     result
   end
 
-  DatabaseCleaner[:neo4j, connection: {type: :server_db, path: 'http://localhost:7475'}].strategy = :transaction
-
   config.before(:each) do |example|
     unless example.metadata[:cli]
-      DatabaseCleaner.start
       BlockGraph.configuration
-      config = YAML.load_file(File.join(File.dirname(__FILE__), "fixtures/default_config.yml")).deep_symbolize_keys
-      config = config[:blockgraph]
-      neo4j_adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(config[:neo4j][:server], {basic_auth: config[:neo4j][:basic_auth], initialize: {request: {timeout: 600, open_timeout: 2}}})
-      Neo4j::ActiveBase.on_establish_session { Neo4j::Core::CypherSession.new(neo4j_adaptor) }
+      neo4j_session
+      Neo4j::ActiveBase.current_session.query('MATCH(n) DETACH DELETE n')
     end
   end
 
@@ -46,11 +40,18 @@ RSpec.configure do |config|
         File.delete f
       end
     else
-      DatabaseCleaner.clean_with(:truncation)
+      Neo4j::ActiveBase.current_session.query('MATCH(n) DETACH DELETE n')
     end
   end
 
   def test_configuration
     BlockGraph::Parser::Configuration.new("#{Dir.tmpdir}/blockgraph", File.join(File.dirname(__FILE__), 'fixtures/regtest'))
+  end
+
+  def neo4j_session
+    config = YAML.load_file(File.join(File.dirname(__FILE__), "fixtures/default_config.yml")).deep_symbolize_keys
+    config = config[:blockgraph]
+    neo4j_adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(config[:neo4j][:server], {basic_auth: config[:neo4j][:basic_auth], initialize: {request: {timeout: 600, open_timeout: 2}}})
+    Neo4j::ActiveBase.on_establish_session { Neo4j::Core::CypherSession.new(neo4j_adaptor) }
   end
 end
