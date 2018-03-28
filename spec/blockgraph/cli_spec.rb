@@ -1,6 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe BlockGraph::CLI do
+  before do
+    allow_any_instance_of(BlockGraph::Migration).to receive(:run).and_return(nil)
+  end
 
   describe '#start', cli: true do
     it "use -c option, start blockgraph_daemon" do
