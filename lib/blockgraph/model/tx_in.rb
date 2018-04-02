@@ -28,6 +28,22 @@ module BlockGraph
         tx_in
       end
 
+      def self.builds(txes)
+        # Don't save this method.
+        # return Array for BlockGraph::Model::TxIn association.
+        txes.map{|tx|
+          tx_in = new
+          unless tx.coinbase?
+            tx_in.txid = tx.out_point.hash
+            tx_in.vout = tx.out_point.index
+          end
+          tx_in.script_sig = tx.script_sig.to_hex
+          tx_in.script_witness = tx.script_witness.payload unless tx.script_witness.empty?
+          tx_in.sequence = tx.sequence
+          tx_in
+        }
+      end
+
       def add_out_point
         return if self.txid.nil? && self.vout.nil?
         tx_out = BlockGraph::Model::TxOut.find_by_outpoint(self.txid, self.vout)

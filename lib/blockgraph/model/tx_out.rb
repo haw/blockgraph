@@ -16,12 +16,25 @@ module BlockGraph
         tx_out = new
         tx_out.value = tx.value
         tx_out.n = n
-        tx_out.save!
         if tx.script_pubkey.present?
           tx_out.script_pubkey = tx.script_pubkey.to_hex
         end
         tx_out.save!
         tx_out
+      end
+
+      def self.builds(txes)
+        # Don't save this method.
+        # return Array for BlockGraph::Model::TxOut association.
+        txes.map.with_index{|tx, n|
+          tx_out = new
+          tx_out.value = tx.value
+          tx_out.n = n
+          if tx.script_pubkey.present?
+            tx_out.script_pubkey = tx.script_pubkey.to_hex
+          end
+          tx_out
+        }
       end
 
       def self.find_by_outpoint(txid, n)

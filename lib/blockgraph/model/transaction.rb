@@ -28,7 +28,6 @@ module BlockGraph
         transaction.marker = tx.marker
         transaction.flag = tx.flag
         transaction.lock_time = tx.lock_time
-        transaction.save!
         tx.inputs.each do |i|
           transaction.inputs << BlockGraph::Model::TxIn.create_from_tx(i)
         end
@@ -37,6 +36,22 @@ module BlockGraph
         end
         transaction.save!
         transaction
+      end
+
+      def self.builds(txes)
+        # Don't save this method.
+        # return Array for BlockGraph::Model::Transaction association.
+        txes.map{|tx|
+          transaction = new
+          transaction.txid = tx.txid
+          transaction.version = tx.version
+          transaction.marker = tx.marker
+          transaction.flag = tx.flag
+          transaction.lock_time = tx.lock_time
+          transaction.inputs = BlockGraph::Model::TxIn.builds(tx.inputs)
+          transaction.outputs = BlockGraph::Model::TxOut.builds(tx.outputs)
+          transaction
+        }
       end
 
       def to_payload
