@@ -103,7 +103,7 @@ module BlockGraph
         block_headers.each do |block|
           txes = []
           header = Bitcoin::BlockHeader.new(block.version, (block.genesis_block? ? Bitcoin.chain_params.genesis_block.header.prev_hash : block.previous_block.block_hash), block.merkle_root, block.time, block.bits, block.nonce)
-          block.transactions.reverse_each do |tx|
+          block.transactions.order(neo_id: :asc).each do |tx|
             txes << Bitcoin::Tx.parse_from_payload(tx.to_payload)
           end
           info = BlockGraph::Parser::BlockInfo.new(header, block.size, txes, block.tx_num, block.input_num, block.output_num, block.file_num)
