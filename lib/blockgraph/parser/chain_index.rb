@@ -115,7 +115,7 @@ module BlockGraph
       end
 
       def blocks_to_add
-        block_list = self.block_list.sort{|(k1, v1), (k2, v2)| v1.height <=> v2.height}
+        block_list = self.block_list.reject{|k, v| v.height.blank?}.sort{|(k1, v1), (k2, v2)| v1.height <=> v2.height}
         block_list = block_list[(old_chain.height + 1)..-1] if old_chain
         block_list
       end
