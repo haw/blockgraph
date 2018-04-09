@@ -32,7 +32,7 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
     before do
       index = BlockGraph::Parser::ChainIndex.new(test_configuration)
       index.update
-      index.blocks_to_add.each do |(h, block)|
+      index.blocks_to_add.each do |block|
         BlockGraph::Model::BlockHeader.create_from_blocks(block)
       end
     end

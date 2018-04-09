@@ -27,12 +27,12 @@ module BlockGraph
         puts "coming soon start migration. #{Time.now}"
         begin
           blocks = parser.update_chain
-          blocks.each do |(h, block)|
+          blocks.each do |block|
             puts "start migration for block height #{block.height}. #{Time.now}"
             Neo4j::ActiveBase.run_transaction do |tx|
               begin
                 BlockGraph::Model::BlockHeader.create_from_blocks(block)
-                @block_height = blocks[-1][1].height
+                @block_height = blocks[-1].height
               rescue => e
                 tx.failure
                 raise e

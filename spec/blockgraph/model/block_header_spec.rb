@@ -15,7 +15,7 @@ RSpec.describe BlockGraph::Model::BlockHeader do
     }
 
     before do
-      blocks.each do |(h, block)|
+      blocks.each do |block|
         BlockGraph::Model::BlockHeader.create_from_blocks(block)
       end
     end
@@ -30,7 +30,7 @@ RSpec.describe BlockGraph::Model::BlockHeader do
 
     it 'should create new block. when some block header exist.' do
       expect{
-        added_blocks.each do |(h, block)|
+        added_blocks.each do |block|
           BlockGraph::Model::BlockHeader.create_from_blocks(block)
         end
       }.to change{BlockGraph::Model::BlockHeader.count}.by(0)

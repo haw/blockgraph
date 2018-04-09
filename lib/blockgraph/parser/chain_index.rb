@@ -114,10 +114,41 @@ module BlockGraph
         chain_index
       end
 
+      def generate_chain(max_block_height)
+        chain = []
+        max_height = 0
+        max_height_block = nil
+        block_list.each do |hash, block|
+          if block.height > max_height
+            max_height_block = block
+            max_height = block.height
+          end
+        end
+
+        return chain if max_height_block.nil?
+
+        hash = max_height_block.block_hash
+
+        while hash != Bitcoin.chain_params.genesis_block.header.prev_hash
+          block = block_list[hash]
+          chain << block
+          hash = Bitcoin::BlockHeader.parse_from_payload(block.header.to_payload).prev_hash
+        end
+
+        chain.reverse!
+        if max_block_height < 0
+          return chain[0..(chain.size-1+max_block_height)]
+        elsif max_block_height == 0 || max_block_height > chain.size
+          return chain
+        else
+          return chain[0..max_block_height]
+        end
+      end
+
       def blocks_to_add
-        block_list = self.block_list.reject{|k, v| v.height.blank?}.sort{|(k1, v1), (k2, v2)| v1.height <=> v2.height}
-        block_list = block_list[(old_chain.height + 1)..-1] if old_chain
-        block_list
+        chain_blocks = generate_chain(0)
+        chain_blocks = chain_blocks[(old_chain.height + 1)..-1] if old_chain
+        chain_blocks
       end
 
       private
