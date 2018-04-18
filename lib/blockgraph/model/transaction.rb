@@ -54,6 +54,25 @@ module BlockGraph
         }
       end
 
+      def self.import(file_name)
+        puts "transaction import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT 10000 LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row
+                          MERGE (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase`
+                          {
+                            txid: row.txid, version: toInt(row.version), lock_time: row.lock_time
+                          })
+                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp()
+                          SET tx.marker = toInt(row.marker), tx.flag = toInt(row.flag), tx.updated_at = timestamp()
+                        ")
+        self.neo4j_query("USING PERIODIC COMMIT 10000 LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_rel.csv' AS row
+                          MATCH (b:`BlockGraph::Model::BlockHeader` {block_hash: row.block_hash}), (tx:`BlockGraph::Model::Transaction` {txid: row.txid})
+                          MERGE (tx)-[:block]->(b)
+                        ")
+        BlockGraph::Model::TxIn.import(file_name)
+        BlockGraph::Model::TxOut.import(file_name)
+        puts "transaction import end #{Time.current}"
+      end
+
       def to_payload
         witness? ? serialize_witness_format : serialize_old_format
       end

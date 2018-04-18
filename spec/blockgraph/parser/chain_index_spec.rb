@@ -55,4 +55,22 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
       expect(txes[-1].outputs.length).to eq(2)
     end
   end
+
+  describe 'export' do
+    subject {
+      index = BlockGraph::Parser::ChainIndex.new(testnet_conf)
+      index.update
+      index
+    }
+    let(:import_dir) {
+      Neo4j::ActiveBase.current_session.query('CALL dbms.listConfig() yield name,value WHERE name=~"dbms.directories.import" RETURN value').rows[0].first
+    }
+    it 'should creat e file in tmp dir' do
+      # expect(File.exists?(File.join(import_dir, "block_headers.csv"))).to be_falsey
+      subject.export("block_headers")
+      expect(File.exists?(File.join(import_dir, "block_headers.csv"))).to be_truthy
+    end
+
+  end
+
 end

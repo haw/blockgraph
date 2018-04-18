@@ -29,4 +29,12 @@ RSpec.describe BlockGraph::Model::Transaction do
       expect(subject[-1].lock_time).to eq 101
     end
   end
+
+  describe 'import' do
+    it do
+      BlockGraph::Model::BlockHeader.import("block_headers")
+      BlockGraph::Model::Transaction.import("transactions")
+      expect(BlockGraph::Model::Transaction.exists?).to be_truthy
+    end
+  end
 end

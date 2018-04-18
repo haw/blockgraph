@@ -1,3 +1,5 @@
+require 'csv'
+
 module BlockGraph
   module Parser
     class ChainIndex
@@ -38,61 +40,92 @@ module BlockGraph
         forward_hashes = {}
 
         puts 'fetch block start.'
-        Parallel.map(files, in_processes: 4, finish: -> (item, i, result){
-          @newest_block = result.last if !result.empty? && i == files.length - 1
-          file_done += 1
-          result.each do |b|
-            @block_list[b.block_hash] = b
-          end
-          print "\r#{((file_done.to_f / file_count) * 100).to_i}% done fetching block."
-        }) do |file|
-          File.open(file) do |f|
-            first_file = file == files.first
-            last_file = file == files.last
-            io = StringIO.new(f.read)
-            io.pos = file_pos if first_file && file_pos > 0
-            until io.eof?
-              current_block_pos = io.pos
-              magic_head, size = io.read(8).unpack("a4I")
-              unless magic_head == valid_magic_head
-                break if last_file && current_block_pos > 0
-                raise 'magic bytes is mismatch.'
-              end
-              block = BlockGraph::Parser::BlockInfo.parse_from_raw_data(io, size, to_file_num(file))
-              blocks << block
+        max_readable_block = 10000
+        puts Time.current
+        File.open(files[0]) do |f|
+          first_file = files[0] == files.first
+          last_file = files[0] == files.last
+          io = StringIO.new(f.read)
+          io.pos = file_pos if first_file && file_pos > 0
+          cnt = 0
+          until io.eof?
+            current_block_pos = io.pos
+            magic_head, size = io.read(8).unpack("a4I")
+            unless magic_head == valid_magic_head
+              break if last_file && current_block_pos > 0
+              raise 'magic bytes is mismatch.'
             end
-            blocks
+            block = BlockGraph::Parser::BlockInfo.parse_from_raw_data(io, size, to_file_num(files[0]))
+            blocks << block
+            cnt += 1
+            break if cnt >= max_readable_block
           end
+          blocks
         end
+        puts "finish reading 10000 blocks. #{Time.current}"
+        @newest_block = blocks.last
+        blocks.each do |b|
+          @block_list[b.block_hash] = b
+        end
+
+        puts "calculate block height begin #{Time.current}"
+        reorg_blocks
+        puts "calculate block height end #{Time.current}"
+        # Parallel.map(files, in_processes: 4, finish: -> (item, i, result){
+        #   @newest_block = result.last if !result.empty? && i == files.length - 1
+        #   file_done += 1
+        #   result.each do |b|
+        #     @block_list[b.block_hash] = b
+        #   end
+        #   print "\r#{((file_done.to_f / file_count) * 100).to_i}% done fetching block."
+        # }) do |file|
+        #   File.open(file) do |f|
+        #     first_file = file == files.first
+        #     last_file = file == files.last
+        #     io = StringIO.new(f.read)
+        #     io.pos = file_pos if first_file && file_pos > 0
+        #     until io.eof?
+        #       current_block_pos = io.pos
+        #       magic_head, size = io.read(8).unpack("a4I")
+        #       unless magic_head == valid_magic_head
+        #         break if last_file && current_block_pos > 0
+        #         raise 'magic bytes is mismatch.'
+        #       end
+        #       block = BlockGraph::Parser::BlockInfo.parse_from_raw_data(io, size, to_file_num(file))
+        #       blocks << block
+        #     end
+        #     blocks
+        #   end
+        # end
         puts
 
-        block_list.each do |h, b|
-          if forward_hashes[b.header.prev_hash]
-            forward_hashes[b.header.prev_hash] << h
-          else
-            forward_hashes[b.header.prev_hash] = [h]
-          end
-        end
+        # block_list.each do |h, b|
+        #   if forward_hashes[b.header.prev_hash]
+        #     forward_hashes[b.header.prev_hash] << h
+        #   else
+        #     forward_hashes[b.header.prev_hash] = [h]
+        #   end
+        # end
+        #
+        # puts 'calculate block height.'
+        #
+        # genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
+        # block_list[genesis_hash].height = 0
+        #
+        # queue = [[genesis_hash, 0]]
+        #
+        # until queue.empty?
+        #   block_hash, height = queue.pop
+        #   if forward_hashes[block_hash]
+        #     forward_hashes[block_hash].each do|next_hash|
+        #       block = block_list[next_hash]
+        #       block.height = height + 1
+        #       queue << [block.block_hash, block.height]
+        #     end
+        #   end
+        # end
 
-        puts 'calculate block height.'
-
-        genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
-        block_list[genesis_hash].height = 0
-
-        queue = [[genesis_hash, 0]]
-
-        until queue.empty?
-          block_hash, height = queue.pop
-          if forward_hashes[block_hash]
-            forward_hashes[block_hash].each do|next_hash|
-              block = block_list[next_hash]
-              block.height = height + 1
-              queue << [block.block_hash, block.height]
-            end
-          end
-        end
-
-        puts "fetched blocks up to #{newest_block.height} height."
+        # puts "fetched blocks up to #{newest_block.height} height."
 
       end
 
@@ -119,6 +152,7 @@ module BlockGraph
         max_height = 0
         max_height_block = nil
         block_list.each do |hash, block|
+          next if block.blank? || block.height.blank?
           if block.height > max_height
             max_height_block = block
             max_height = block.height
@@ -149,6 +183,46 @@ module BlockGraph
         chain_blocks = generate_chain(0)
         chain_blocks = chain_blocks[(old_chain.height + 1)..-1] if old_chain
         chain_blocks
+      end
+
+      def reorg_blocks
+        forward_hashes = {}
+
+        block_list.each do |h, b|
+          if forward_hashes[b.header.prev_hash]
+            forward_hashes[b.header.prev_hash] << h
+          else
+            forward_hashes[b.header.prev_hash] = [h]
+          end
+        end
+
+        puts 'calculate block height.'
+
+        genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
+        block_list[genesis_hash].height = 0
+
+        queue = [[genesis_hash, 0]]
+
+        until queue.empty?
+          block_hash, height = queue.pop
+          if forward_hashes[block_hash]
+            forward_hashes[block_hash].each do|next_hash|
+              block = block_list[next_hash]
+              block.height = height + 1
+              queue << [block.block_hash, block.height]
+            end
+          end
+        end
+
+        puts "fetched blocks up to #{newest_block.height} height."
+      end
+
+      def export(file_name)
+        blocks = generate_chain(0)
+        b_extracter = BlockGraph::Util::BlockExtracter.new(blocks)
+        tx_extracter = BlockGraph::Util::TxExtracter.new(blocks)
+        b_extracter.export
+        tx_extracter.export
       end
 
       private

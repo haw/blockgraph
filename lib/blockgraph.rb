@@ -11,6 +11,7 @@ module BlockGraph
   autoload :Configuration, 'blockgraph/configuration'
   autoload :Model, 'blockgraph/model'
   autoload :Parser, 'blockgraph/parser'
+  autoload :Util, 'blockgraph/util'
 
   def self.configuration
     @configuration ||= BlockGraph::Configuration.new

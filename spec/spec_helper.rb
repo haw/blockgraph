@@ -29,6 +29,7 @@ RSpec.configure do |config|
   config.before(:each) do |example|
     unless example.metadata[:cli]
       BlockGraph.configuration
+      # BlockGraph.configuration.unload_extensions
       neo4j_session
       Neo4j::ActiveBase.current_session.query('MATCH(n) DETACH DELETE n')
     end
@@ -40,7 +41,7 @@ RSpec.configure do |config|
         File.delete f
       end
     else
-      Neo4j::ActiveBase.current_session.query('MATCH(n) DETACH DELETE n')
+      # Neo4j::ActiveBase.current_session.query('MATCH(n) DETACH DELETE n')
     end
   end
 
@@ -53,5 +54,9 @@ RSpec.configure do |config|
     config = config[:blockgraph]
     neo4j_adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(config[:neo4j][:server], {basic_auth: config[:neo4j][:basic_auth], initialize: {request: {timeout: 600, open_timeout: 2}}})
     Neo4j::ActiveBase.on_establish_session { Neo4j::Core::CypherSession.new(neo4j_adaptor) }
+  end
+
+  def testnet_conf
+    BlockGraph::Parser::Configuration.new("#{Dir.tmpdir}/blockgraph", '/Users/okumura/Library/Application Support/Bitcoin/testnet3')
   end
 end

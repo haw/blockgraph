@@ -82,4 +82,11 @@ RSpec.describe BlockGraph::Model::BlockHeader do
     end
   end
 
+  describe 'import' do
+    it 'should be imported block header nodes by csv' do
+      BlockGraph::Model::BlockHeader.import("block_headers")
+      expect(BlockGraph::Model::BlockHeader.count).to eq 103
+    end
+  end
+
 end
