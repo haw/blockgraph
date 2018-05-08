@@ -66,33 +66,9 @@ module BlockGraph
         end
         puts
 
-        block_list.each do |h, b|
-          if forward_hashes[b.header.prev_hash]
-            forward_hashes[b.header.prev_hash] << h
-          else
-            forward_hashes[b.header.prev_hash] = [h]
-          end
-        end
-
-        puts 'calculate block height.'
-
-        genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
-        block_list[genesis_hash].height = 0
-
-        queue = [[genesis_hash, 0]]
-
-        until queue.empty?
-          block_hash, height = queue.pop
-          if forward_hashes[block_hash]
-            forward_hashes[block_hash].each do|next_hash|
-              block = block_list[next_hash]
-              block.height = height + 1
-              queue << [block.block_hash, block.height]
-            end
-          end
-        end
-
-        puts "fetched blocks up to #{newest_block.height} height."
+        puts "calculate block height begin #{Time.current}"
+        reorg_blocks
+        puts "calculate block height end #{Time.current}"
 
       end
 
@@ -119,6 +95,7 @@ module BlockGraph
         max_height = 0
         max_height_block = nil
         block_list.each do |hash, block|
+          next if block.blank? || block.height.blank?
           if block.height > max_height
             max_height_block = block
             max_height = block.height
@@ -149,6 +126,39 @@ module BlockGraph
         chain_blocks = generate_chain(0)
         chain_blocks = chain_blocks[(old_chain.height + 1)..-1] if old_chain
         chain_blocks
+      end
+
+      def reorg_blocks
+        forward_hashes = {}
+
+        block_list.each do |h, b|
+          if forward_hashes[b.header.prev_hash]
+            forward_hashes[b.header.prev_hash] << h
+          else
+            forward_hashes[b.header.prev_hash] = [h]
+          end
+        end
+
+        puts 'calculate block height.'
+
+        genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
+        block_list[genesis_hash].height = 0
+
+        queue = [[genesis_hash, 0]]
+
+        until queue.empty?
+          block_hash, height = queue.pop
+          if forward_hashes[block_hash]
+            forward_hashes[block_hash].each do|next_hash|
+              block = block_list[next_hash]
+              @newest_block = block
+              block.height = height + 1
+              queue << [block.block_hash, block.height]
+            end
+          end
+        end
+
+        puts "fetched blocks up to #{newest_block.height} height."
       end
 
       private
