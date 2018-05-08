@@ -50,6 +50,27 @@ module BlockGraph
         Bitcoin.chain_params.genesis_block.header.hash == self.block_hash
       end
 
+      def self.import(file_name)
+        puts "block import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row
+                          MERGE (b:`BlockGraph::Model::BlockHeader`:`BlockGraph::Model::ActiveNodeBase`
+                          {
+                            block_hash: row.block_hash
+                          })
+                          ON CREATE SET b.uuid = row.uuid, b.created_at = timestamp(), b.version = row.version, b.merkle_root = row.merkle_root, b.time = row.time,
+                            b.bits = row.bits, b.nonce = row.nonce, b.size = row.size, b.height = row.height, b.tx_num = row.tx_num, b.input_num = row.input_num,
+                            b.output_num = row.output_num, b.file_num = row.file_num, b.updated_at = timestamp()
+                          ON MATCH SET b.updated_at = timestamp()
+                        ")
+        puts "block relation import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_rel.csv' AS row WITH row.block_hash AS block_hash, row.previous_block AS prev
+                          MATCH (b:`BlockGraph::Model::BlockHeader` {block_hash: block_hash})
+                          MATCH (p:`BlockGraph::Model::BlockHeader` {block_hash: prev})
+                          MERGE (b)-[:previous_block]->(p)
+                        ")
+        puts "block import end #{Time.current}"
+      end
+
     end
   end
 end

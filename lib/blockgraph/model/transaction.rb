@@ -54,6 +54,27 @@ module BlockGraph
         }
       end
 
+      def self.import(file_name)
+        puts "transaction import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row
+                          MERGE (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase`
+                          {
+                            txid: row.txid
+                          })
+                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInt(row.version), tx.lock_time = row.lock_time, tx.marker = toInt(row.marker), tx.flag = toInt(row.flag), tx.updated_at = timestamp()
+                          ON MATCH SET tx.marker = toInt(row.marker), tx.flag = toInt(row.flag), tx.updated_at = timestamp()
+                        ")
+        puts "transaction relation import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_rel.csv' AS row WITH row.block_hash AS block_hash, row.txid AS txid
+                          MATCH (b:`BlockGraph::Model::BlockHeader`:`BlockGraph::Model::ActiveNodeBase` {block_hash: block_hash})
+                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {txid: txid})
+                          MERGE (tx)-[:block]->(b)
+                        ")
+        BlockGraph::Model::TxIn.import(file_name)
+        BlockGraph::Model::TxOut.import(file_name)
+        puts "transaction import end #{Time.current}"
+      end
+
       def to_payload
         witness? ? serialize_witness_format : serialize_old_format
       end

@@ -44,6 +44,23 @@ module BlockGraph
         }
       end
 
+      def self.import(file_name)
+        puts "tx inputs import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_inputs.csv' AS row
+                          CREATE (tx:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase`
+                          {
+                            script_sig: row.script_sig, script_witness: row.script_witness, sequence: row.sequence, uuid: row.uuid, created_at: timestamp()
+                          })
+                          SET tx.txid = row.txid, tx.vout = row.vout, tx.updated_at = timestamp()
+                        ")
+        puts "tx inputs relation import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_inputs_rel.csv' AS row WITH row.spent_tx AS spent_id, row.uuid AS uuid
+                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: spent_id}), (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
+                          MERGE (in)-[:transaction]->(tx)
+                        ")
+        puts "tx inputs import end #{Time.current}"
+      end
+
       def add_out_point
         return if self.txid.nil? && self.vout.nil?
         tx_out = BlockGraph::Model::TxOut.find_by_outpoint(self.txid, self.vout)
