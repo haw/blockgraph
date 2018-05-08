@@ -161,6 +161,12 @@ module BlockGraph
         puts "fetched blocks up to #{newest_block.height} height."
       end
 
+      def export
+        blocks = generate_chain(0)
+        extr = BlockGraph::Util::Extracter.new
+        extr.export(blocks)
+      end
+
       private
 
       def max_block_file_num(start_file = 0)
