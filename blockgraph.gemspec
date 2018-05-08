@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bitcoinrb", "~> 0.1.6"
   spec.add_development_dependency "thor"
   spec.add_development_dependency "daemon-spawn"
-  spec.add_development_dependency "activesupport", ">= 4.0.2"
+  spec.add_development_dependency "activesupport", "~> 5.1.6"
   spec.add_development_dependency "octorelease"
   spec.add_development_dependency "parallel", "~> 1.12.1"
 end
