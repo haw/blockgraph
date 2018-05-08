@@ -37,7 +37,7 @@ When you run rspec, you need to run neo4j test server(http://localhost:7475) in 
 ### install test database
 
 ```
-$ rake neo4j:install[community-3.3.3,test]
+$ rake neo4j:install[community-3.3.5,test]
 ```
 
 ### change port
