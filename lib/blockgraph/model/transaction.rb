@@ -70,8 +70,8 @@ module BlockGraph
                           MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {txid: txid})
                           MERGE (tx)-[:block]->(b)
                         ")
-        BlockGraph::Model::TxIn.import(file_name)
         BlockGraph::Model::TxOut.import(file_name)
+        BlockGraph::Model::TxIn.import(file_name)
         puts "transaction import end #{Time.current}"
       end
 

@@ -54,7 +54,8 @@ module BlockGraph
         end
         puts "tx outputs relation import begin #{Time.current}"
         self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_outputs_rel.csv' AS row WITH row.transaction AS tx_id, row.uuid AS uuid
-                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: tx_id}), (out:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
+                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: tx_id})
+                          MATCH (out:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
                           MERGE (out)-[:transaction]->(tx)
                         ")
         puts "tx outputs import end #{Time.current}"

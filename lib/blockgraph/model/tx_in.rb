@@ -55,8 +55,15 @@ module BlockGraph
                         ")
         puts "tx inputs relation import begin #{Time.current}"
         self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_inputs_rel.csv' AS row WITH row.spent_tx AS spent_id, row.uuid AS uuid
-                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: spent_id}), (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
+                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: spent_id})
+                          MATCH (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
                           MERGE (in)-[:transaction]->(tx)
+                        ")
+        puts "outpoint import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_inputs.csv' AS row WITH row.uuid AS uuid, row.txid AS txid, toInteger(row.vout) AS vout
+                          MATCH (tx:`BlockGraph::Model::Transaction` {txid: txid})<-[:transaction]-(out:`BlockGraph::Model::TxOut` {n: vout})
+                          MATCH (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
+                          MERGE (out)-[:out_point]->(in)
                         ")
         puts "tx inputs import end #{Time.current}"
       end
