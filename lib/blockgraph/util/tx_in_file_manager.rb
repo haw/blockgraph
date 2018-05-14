@@ -2,15 +2,25 @@ module BlockGraph
   module Util
     class TxInFileManager < FileManager
 
-      def initialize(**opt)
-        file_name = opt[:file_name] || "transactions_inputs"
-        super(file_name)
-        insert_header if opt[:header]
+      def initialize
+        super
       end
 
       def insert_header
         node_file << ["uuid", "script_sig", "script_witness", "sequence", "vout", "txid"]
         rel_file << ["uuid", "spent_tx"]
+      end
+
+      def open(file_name, mode = "r", **opt)
+        super(file_name, mode)
+        insert_header if opt[:header]
+      end
+
+      def export(nodes, rels)
+        open("transactions_inputs", "w", header: true)
+        nodes.each{ |node| node_file << node }
+        rels.each{ |rel| rel_file << rel }
+        close
       end
 
     end

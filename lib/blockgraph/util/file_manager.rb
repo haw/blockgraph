@@ -8,14 +8,12 @@ module BlockGraph
       attr_reader :rel_file
       attr_reader :dir
 
-      def initialize(file_name, **opt)
+      def initialize(**opt)
         @dir = opt[:dir]
         unless @dir
           neo4j_config = Neo4j::ActiveBase.current_session.query('CALL dbms.listConfig() yield name,value WHERE name=~"dbms.directories.import" RETURN value')
           @dir = neo4j_config.rows.first
         end
-        @node_file = CSV.open(path(file_name + ".csv"), "w", force_quotes: true)
-        @rel_file = CSV.open(path(file_name + "_rel" + ".csv"), "w", force_quotes: true)
       end
 
       def path(file_name)
@@ -26,6 +24,11 @@ module BlockGraph
         CSV.open(path(name), "w", force_quotes: true) do |csv|
           csv << head
         end
+      end
+
+      def open(file_name, mode = "r")
+        @node_file = CSV.open(path(file_name + ".csv"), mode, force_quotes: true)
+        @rel_file = CSV.open(path(file_name + "_rel" + ".csv"), mode, force_quotes: true)
       end
 
       def flush
