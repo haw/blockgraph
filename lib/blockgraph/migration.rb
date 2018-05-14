@@ -52,6 +52,15 @@ module BlockGraph
       }
     end
 
+    def run_with_height(max_block_height = 0)
+      puts "coming soon start migration. #{Time.now}"
+      blocks = parser.update_chain(max_block_height)
+      extr = BlockGraph::Util::Extracter.new
+      extr.export(blocks)
+      BlockGraph::Model::BlockHeader.import("block_headers")
+      BlockGraph::Model::Transaction.import("transactions")
+    end
+
     private
 
     def neo4j_timeout_ops(config)
