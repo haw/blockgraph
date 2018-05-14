@@ -85,17 +85,6 @@ module BlockGraph
         end
       end
 
-      def close_files
-        block.close
-        tx.close
-        tx_in.close
-        tx_out.close
-      end
-
-      def file_closed?
-        block.closed? || tx.closed? || tx_in.closed? || tx_out.closed?
-      end
-
     end
   end
 end
