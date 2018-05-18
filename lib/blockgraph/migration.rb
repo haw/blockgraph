@@ -59,6 +59,9 @@ module BlockGraph
       extr.export(blocks)
       BlockGraph::Model::BlockHeader.import("block_headers")
       BlockGraph::Model::Transaction.import("transactions")
+      puts
+      puts "end migration for block height #{blocks[-1].height}. #{Time.now}"
+    end
 
     def export
       loop {
