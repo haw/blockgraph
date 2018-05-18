@@ -51,6 +51,16 @@ namespace :bg do
     get_migration(args.config_path).search_invalid_oa_tx
   end
 
+  desc 'Export csv files converted raw data'
+  task :export, [:config_path] do |task, args|
+    get_migration(args.config_path).export
+  end
+
+  desc 'Import csv files using batch export'
+  task :import_batch, [:config_path] do |task, args|
+    get_migration(args.config_path).import_batch
+  end
+
   private
   def get_migration(config_path)
     config = YAML.load(File.read(config_path)).deep_symbolize_keys[:blockgraph]
