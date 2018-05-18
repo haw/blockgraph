@@ -3,7 +3,7 @@ module BlockGraph
   module Model
     class TxOut < ActiveNodeBase
 
-      property :value
+      property :value, type: Float
       property :n, type: Integer
       property :script_pubkey
 
@@ -40,20 +40,23 @@ module BlockGraph
 
       def self.import(file_name)
         puts "tx outputs import begin #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_outputs.csv' AS row
-                          CREATE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row
+                          MERGE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
                           {
-                            value: row.value, n: toInteger(row.n), uuid: row.uuid, created_at: timestamp()
+                            uuid: row.uuid
                           })
-                          SET tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp()
+                          ON CREATE SET tx.value = toFloat(row.value), tx.n = toInteger(row.n), tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp(), tx.created_at = timestamp()
+                          ON MATCH SET tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp()
                         ")
-        CSV.foreach(File.expand_path("db/neo4j/test/import/#{file_name}_outputs_large.csv", Dir.pwd), headers: true) do |csv|
-          self.neo4j_query("CREATE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
-                            {value: #{csv["value"]}, n: toInteger(#{csv["n"]}), uuid: '#{csv["uuid"]}', created_at: timestamp()})
-                            SET tx.script_pubkey = '#{csv["script_pubkey"]}', tx.updated_at = timestamp()")
+        CSV.foreach(File.expand_path("db/neo4j/test/import/#{file_name}_large.csv", Dir.pwd), headers: true) do |csv|
+          self.neo4j_query("MERGE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
+                            {uuid: '#{csv["uuid"]}'})
+                            ON CREATE SET tx.value = toFloat(#{csv["value"]}), tx.n = toInteger(#{csv["n"]}), tx.script_pubkey = '#{csv["script_pubkey"]}', tx.updated_at = timestamp(), tx.created_at = timestamp()
+                            ON MATCH SET tx.script_pubkey = '#{csv["script_pubkey"]}', tx.updated_at = timestamp()
+                          ")
         end
         puts "tx outputs relation import begin #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_outputs_rel.csv' AS row WITH row.transaction AS tx_id, row.uuid AS uuid
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_rel.csv' AS row WITH row.transaction AS tx_id, row.uuid AS uuid
                           MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: tx_id})
                           MATCH (out:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
                           MERGE (out)-[:transaction]->(tx)

@@ -6,10 +6,11 @@ module BlockGraph
       property :version, type: Integer
       property :merkle_root
       property :time, type: Integer
-      property :bits
+      property :bits, type: Integer
       property :nonce, type: Integer
       property :height, type: Integer
       property :file_num, type: Integer
+      property :file_pos, type: Integer
       property :size, type: Integer
       property :tx_num, type: Integer
       property :input_num, type: Integer
@@ -57,9 +58,9 @@ module BlockGraph
                           {
                             block_hash: row.block_hash
                           })
-                          ON CREATE SET b.uuid = row.uuid, b.created_at = timestamp(), b.version = row.version, b.merkle_root = row.merkle_root, b.time = row.time,
-                            b.bits = row.bits, b.nonce = row.nonce, b.size = row.size, b.height = row.height, b.tx_num = row.tx_num, b.input_num = row.input_num,
-                            b.output_num = row.output_num, b.file_num = row.file_num, b.updated_at = timestamp()
+                          ON CREATE SET b.uuid = row.uuid, b.created_at = timestamp(), b.version = toInteger(row.version), b.merkle_root = row.merkle_root, b.time = toInteger(row.time),
+                            b.bits = toInteger(row.bits), b.nonce = toInteger(row.nonce), b.size = toInteger(row.size), b.height = toInteger(row.height), b.tx_num = toInteger(row.tx_num), b.input_num = toInteger(row.input_num),
+                            b.output_num = toInteger(row.output_num), b.file_num = toInteger(row.file_num), b.file_pos = toInteger(row.file_pos), b.updated_at = timestamp()
                           ON MATCH SET b.updated_at = timestamp()
                         ")
         puts "block relation import begin #{Time.current}"

@@ -6,7 +6,7 @@ module BlockGraph
       property :version, type: Integer
       property :marker, type: Integer
       property :flag, type: Integer
-      property :lock_time
+      property :lock_time, type: Integer
 
       has_one :out, :block, type: :block, model_class: 'BlockGraph::Model::BlockHeader'
       has_many :in, :inputs, origin: :transaction, model_class: 'BlockGraph::Model::TxIn', dependent: :destroy
@@ -61,8 +61,8 @@ module BlockGraph
                           {
                             txid: row.txid
                           })
-                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInt(row.version), tx.lock_time = row.lock_time, tx.marker = toInt(row.marker), tx.flag = toInt(row.flag), tx.updated_at = timestamp()
-                          ON MATCH SET tx.marker = toInt(row.marker), tx.flag = toInt(row.flag), tx.updated_at = timestamp()
+                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInteger(row.version), tx.lock_time = toInteger(row.lock_time), tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
+                          ON MATCH SET tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
                         ")
         puts "transaction relation import begin #{Time.current}"
         self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_rel.csv' AS row WITH row.block_hash AS block_hash, row.txid AS txid
@@ -70,8 +70,8 @@ module BlockGraph
                           MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {txid: txid})
                           MERGE (tx)-[:block]->(b)
                         ")
-        BlockGraph::Model::TxOut.import(file_name)
-        BlockGraph::Model::TxIn.import(file_name)
+        BlockGraph::Model::TxOut.import(file_name[0...(file_name.index("tx") + 2)] + "_outputs" + file_name[(file_name.index("tx") + 2)..-1])
+        BlockGraph::Model::TxIn.import(file_name[0...(file_name.index("tx") + 2)] + "_inputs" + file_name[(file_name.index("tx") + 2)..-1])
         puts "transaction import end #{Time.current}"
       end
 
@@ -97,14 +97,14 @@ module BlockGraph
       # https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki
       def serialize_witness_format
         buf = [self.version, MARKER, FLAG].pack('Vcc')
-        buf << Bitcoin.pack_var_int(self.inputs.length) << self.inputs.map(&:to_payload).join
-        buf << Bitcoin.pack_var_int(self.outputs.length) << self.outputs.map(&:to_payload).join
+        buf << Bitcoin.pack_var_int(self.inputs.length) << self.inputs.order(vout: :asc).map(&:to_payload).join
+        buf << Bitcoin.pack_var_int(self.outputs.length) << self.outputs.order(n: :asc).map(&:to_payload).join
         buf << witness_payload << [self.lock_time].pack('V')
         buf
       end
 
       def witness_payload
-        self.inputs.map { |i| i.script_witness.to_payload }.join
+        self.inputs.map { |i| Bitcoin::ScriptWitness.new(i.script_witness.split(' ')).to_payload }.join
       end
 
     end

@@ -3,9 +3,9 @@ module BlockGraph
     class TxIn < ActiveNodeBase
 
       property :txid
-      property :vout
+      property :vout, type: Integer
       property :script_sig
-      property :sequence
+      property :sequence, type: Integer
       property :script_witness
 
       has_one :out, :transaction, type: :transaction, model_class: 'BlockGraph::Model::Transaction'
@@ -46,21 +46,22 @@ module BlockGraph
 
       def self.import(file_name)
         puts "tx inputs import begin #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_inputs.csv' AS row
-                          CREATE (tx:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase`
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row
+                          MERGE (tx:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase`
                           {
-                            script_sig: row.script_sig, script_witness: row.script_witness, sequence: row.sequence, uuid: row.uuid, created_at: timestamp()
+                            uuid: row.uuid
                           })
-                          SET tx.txid = row.txid, tx.vout = row.vout, tx.updated_at = timestamp()
+                          ON CREATE SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.script_sig = row.script_sig, tx.script_witness = row.script_witness, tx.sequence = toInteger(row.sequence), tx.updated_at = timestamp(), tx.created_at = timestamp()
+                          ON MATCH SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.updated_at = timestamp()
                         ")
         puts "tx inputs relation import begin #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_inputs_rel.csv' AS row WITH row.spent_tx AS spent_id, row.uuid AS uuid
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_rel.csv' AS row WITH row.spent_tx AS spent_id, row.uuid AS uuid
                           MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: spent_id})
                           MATCH (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
                           MERGE (in)-[:transaction]->(tx)
                         ")
         puts "outpoint import begin #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}_inputs.csv' AS row WITH row.uuid AS uuid, row.txid AS txid, toInteger(row.vout) AS vout
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row WITH row.uuid AS uuid, row.txid AS txid, toInteger(row.vout) AS vout
                           MATCH (tx:`BlockGraph::Model::Transaction` {txid: txid})<-[:transaction]-(out:`BlockGraph::Model::TxOut` {n: vout})
                           MATCH (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
                           MERGE (out)-[:out_point]->(in)
@@ -78,7 +79,7 @@ module BlockGraph
       end
 
       def to_payload(script_sig = self.script_sig, sequence = self.sequence)
-        p = self.txid.nil? && self.vout.nil? ? Bitcoin::OutPoint.create_coinbase_outpoint.to_payload : Bitcoin::OutPoint.new(self.txid, self.vout).to_payload
+        p = self.txid.blank? && self.vout.blank? ? Bitcoin::OutPoint.create_coinbase_outpoint.to_payload : Bitcoin::OutPoint.new(self.txid, self.vout).to_payload
         p << Bitcoin.pack_var_int(script_sig.htb.bytesize)
         p << script_sig.htb << [sequence].pack('V')
         p
