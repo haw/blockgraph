@@ -44,6 +44,14 @@ module BlockGraph
       def closed?
         node_file.closed? && rel_file.closed?
       end
+
+      def file_name_with_num(file_name)
+        file_num = 0
+        while File.exist?(File.join(dir, file_name + file_num.to_s.rjust(5, '0')) + '.csv')
+          file_num += 1
+        end
+        file_name + file_num.to_s.rjust(5, '0')
+      end
     end
   end
 end

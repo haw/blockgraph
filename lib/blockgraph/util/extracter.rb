@@ -57,7 +57,7 @@ module BlockGraph
           out_node = []; out_large_node = []; out_rel = []
           uuid = SecureRandom.uuid
           block_node = [uuid, block.block_hash, block.header.version, block.header.merkle_root, block.header.time, block.header.bits, block.header.nonce,
-                        block.size, block.height, block.tx_count, block.input_count, block.output_count, block.file_num]
+                        block.size, block.height, block.tx_count, block.input_count, block.output_count, block.file_num, block.file_pos]
           block_rel = [block.block_hash, block.header.prev_hash]
 
           block.transactions.each do |tx|

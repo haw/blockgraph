@@ -17,7 +17,7 @@ module BlockGraph
       end
 
       def export(nodes, rels)
-        open("transactions_inputs", "w", header: true)
+        open(file_name_with_num("tx_inputs"), "w", header: true)
         nodes.each{ |node| node_file << node }
         rels.each{ |rel| rel_file << rel }
         close

@@ -7,7 +7,7 @@ module BlockGraph
       end
 
       def insert_header
-        node_file << ["uuid", "block_hash", "version", "merkle_root", "time", "bits", "nonce", "size", "height", "tx_num", "input_num", "output_num", "file_num"]
+        node_file << ["uuid", "block_hash", "version", "merkle_root", "time", "bits", "nonce", "size", "height", "tx_num", "input_num", "output_num", "file_num", "file_pos"]
         rel_file << ["block_hash", "previous_block"]
       end
 
@@ -17,7 +17,7 @@ module BlockGraph
       end
 
       def export(nodes, rels)
-        open("block_headers", "w", header: true)
+        open(file_name_with_num("block"), "w", header: true)
         nodes.each{ |node| node_file << node }
         rels.each{ |rel| rel_file << rel }
         close
