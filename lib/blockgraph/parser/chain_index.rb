@@ -16,11 +16,11 @@ module BlockGraph
         file_num = 0
         file_pos = 0
 
-        latest_block = BlockGraph::Model::BlockHeader.latest.first
+        latest_block = BlockGraph::Model::BlockHeader.latest[0]
 
         unless latest_block.blank?
           file_num = latest_block.file_num
-          file_pos = BlockGraph::Model::BlockHeader.where(file_num: file_num).reduce(0){|sum, bh| sum += (bh.size + 8)}
+          file_pos = latest_block.file_pos + latest_block.size + 8
         end
 
         max_file_num = max_block_file_num
@@ -56,7 +56,7 @@ module BlockGraph
                 break if last_file && current_block_pos > 0
                 raise 'magic bytes is mismatch.'
               end
-              block = BlockGraph::Parser::BlockInfo.parse_from_raw_data(io, size, to_file_num(file))
+              block = BlockGraph::Parser::BlockInfo.parse_from_raw_data(io, size, to_file_num(file), current_block_pos)
               blocks << block
             end
             blocks

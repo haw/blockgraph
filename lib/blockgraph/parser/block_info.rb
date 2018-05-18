@@ -3,6 +3,7 @@ module BlockGraph
     class BlockInfo
 
       attr_accessor :file_num # Which # file this block is stored in (blk?????.dat)
+      attr_accessor :file_pos
 
       attr_accessor :block_hash
       attr_accessor :header
@@ -16,7 +17,7 @@ module BlockGraph
       # @param [Bitcoin::BlockHeader] header the block
       # @param [Integer] file_num Which  file this block is stored in (blk?????.dat)
       # @param [Integer] file_pos Byte offset within blk?????.dat where this block's data is stored
-      def initialize(header, size, transactions, tx_count, tx_in, tx_out, file_num)
+      def initialize(header, size, transactions, tx_count, tx_in, tx_out, file_num, file_pos)
         @block_hash = header.hash
         @header = header
         @size = size
@@ -25,10 +26,11 @@ module BlockGraph
         @input_count = tx_in
         @output_count = tx_out
         @file_num = file_num
+        @file_pos = file_pos
       end
 
       # parse raw block data.
-      def self.parse_from_raw_data(buf, size, file_num)
+      def self.parse_from_raw_data(buf, size, file_num, file_pos)
         header = Bitcoin::BlockHeader.parse_from_payload(buf.read(80))
         tx_in = tx_out = 0
         tx_count = Bitcoin.unpack_var_int_from_io(buf)
@@ -39,28 +41,13 @@ module BlockGraph
           tx_out += txes[-1].outputs.size
         end
         tx_in -= 1 # remove coinbase
-        self.new(header, size, txes, tx_count, tx_in, tx_out, file_num)
-      end
-
-      # parse BlockInfo data from io.
-      def self.parse_from_io(io)
-        io.read(32) # hash
-        header = Bitcoin::BlockHeader.parse_from_payload(io.read(80))
-        height = Bitcoin.unpack_var_int_from_io(io)
-        size = Bitcoin.unpack_var_int_from_io(io)
-        tx_count = Bitcoin.unpack_var_int_from_io(io)
-        input_count = Bitcoin.unpack_var_int_from_io(io)
-        output_count = Bitcoin.unpack_var_int_from_io(io)
-        file_num = Bitcoin.unpack_var_int_from_io(io)
-        b = self.new(header, size, tx_count, input_count, output_count, file_num)
-        b.height = height
-        b
+        self.new(header, size, txes, tx_count, tx_in, tx_out, file_num, file_pos)
       end
 
       def to_payload
         block_hash.htb << header.to_payload << Bitcoin.pack_var_int(height) << Bitcoin.pack_var_int(size) <<
             Bitcoin.pack_var_int(tx_count) << Bitcoin.pack_var_int(input_count) <<
-            Bitcoin.pack_var_int(output_count) << Bitcoin.pack_var_int(file_num)
+            Bitcoin.pack_var_int(output_count) << Bitcoin.pack_var_int(file_num) << Bitcoin.pack_var_int(file_pos)
       end
 
       private
