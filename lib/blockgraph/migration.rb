@@ -41,7 +41,7 @@ module BlockGraph
     # TODO use RPC import
     def run_with_height(max_block_height = 0)
       puts "coming soon start migration. #{Time.now}"
-      blocks = parser.update_chain(max_block_height)
+      blocks = parser.update_chain
       extr = BlockGraph::Util::Extractor.new
       extr.export(blocks)
       BlockGraph::Model::BlockHeader.import("block_headers")
@@ -51,7 +51,7 @@ module BlockGraph
     end
 
     def export
-      blocks = parser.update_chain(0)
+      blocks = parser.update_chain
       extr = BlockGraph::Util::Extractor.new
       extr.export(blocks)
     end
@@ -59,7 +59,7 @@ module BlockGraph
     def import_batch
       loop {
         begin
-          blocks = parser.update_chain(0)
+          blocks = parser.update_chain
           extr = BlockGraph::Util::Extractor.new
           extr.export(blocks)
           import(max_csv_file_num("block"))
