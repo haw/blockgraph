@@ -16,7 +16,7 @@ module BlockGraph
         file_num = 0
         file_pos = 0
 
-        latest_block = BlockGraph::Model::BlockHeader.latest[0]
+        latest_block = BlockGraph::Model::BlockHeader.all.order(file_num: :desc, file_pos: :desc).limit(1)[0]
 
         unless latest_block.blank?
           file_num = latest_block.file_num
@@ -63,10 +63,6 @@ module BlockGraph
           end
         end
         puts
-
-        puts "calculate block height begin #{Time.current}"
-        reorg_blocks
-        puts "calculate block height end #{Time.current}"
 
       end
 

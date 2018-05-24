@@ -8,11 +8,12 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
     end
   end
 
-  describe '#load' do
+  describe '#update' do
     context 'load file' do
       subject {
         index = BlockGraph::Parser::ChainIndex.new(test_configuration)
         index.update
+        index.reorg_blocks
         index
       }
       it 'should parse block' do
@@ -32,13 +33,14 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
     before do
       index = BlockGraph::Parser::ChainIndex.new(test_configuration)
       index.update
+      index.reorg_blocks
       index.blocks_to_add.each do |block|
         BlockGraph::Model::BlockHeader.create_from_blocks(block)
       end
     end
 
     it 'should restore objects' do
-      index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(test_configuration)
+      index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(test_configuration, tx: true)
       expect(index.newest_block.block_hash).to eq('281dcd1e9124deef18140b754eab0550c46d6bd55e815415266c89d8faaf1f2d'.rhex)
       expect(index.newest_block.tx_count).to eq(4)
       expect(index.newest_block.input_count).to eq(3) # not count coinbase

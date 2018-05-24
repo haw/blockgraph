@@ -5,12 +5,14 @@ RSpec.describe BlockGraph::Model::BlockHeader do
     subject(:blocks) {
       index = BlockGraph::Parser::ChainIndex.new(test_configuration)
       index.update
+      index.reorg_blocks
       index.blocks_to_add
     }
 
     subject(:added_blocks) {
       index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(test_configuration)
       index.update
+      index.reorg_blocks
       index.blocks_to_add
     }
 
