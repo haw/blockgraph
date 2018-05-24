@@ -85,6 +85,22 @@ module BlockGraph
         end
       end
 
+      def parallel_format_block(blocks)
+        Parallel.map(blocks, in_thread: 4, finish: -> (item, i, result) {
+          @block_node << result[0]
+        }) do |block|
+          ['', block.block_hash, block.header.version, block.header.merkle_root, block.header.time, block.header.bits, block.header.nonce,
+           block.size, block.height, block.tx_count, block.input_count, block.output_count, block.file_num, block.file_pos]
+        end
+      end
+
+      def export_update(blocks)
+        CSV.open(File.join(block.dir, "block_height_update.csv"), "w", force_quotes: true) do |csv|
+          csv << ["block_hash", "height"]
+          blocks.each{ |block| csv << [block.block_hash, block.height]}
+        end
+      end
+
     end
   end
 end
