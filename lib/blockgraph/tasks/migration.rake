@@ -63,7 +63,7 @@ namespace :bg do
 
   desc 'Import csv files'
   task :import_csv, [:start_num, :config_path] do |task, args|
-    get_migration(args.config_path).import(args.start_num.to_i)
+    get_migration(args.config_path).import_with_relation(args.start_num.to_i)
   end
 
   desc 'Import csv file for updating block height after calculate block height'
