@@ -75,6 +75,31 @@ module BlockGraph
         puts "transaction import end #{Time.current}"
       end
 
+      def self.import_node(num)
+        num_str = num.is_a?(Integer) ? num.to_s.rjust(5, '0') : num
+        puts "tx#{num_str} import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///tx#{num_str}.csv' AS row
+                          MERGE (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase`
+                          {
+                            txid: row.txid
+                          })
+                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInteger(row.version), tx.lock_time = toInteger(row.lock_time), tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
+                          ON MATCH SET tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
+                        ")
+        puts "tx#{num_str} import end #{Time.current}"
+      end
+
+      def self.import_rel(num)
+        num_str = num.is_a?(Integer) ? num.to_s.rjust(5, '0') : num
+        puts "tx#{num_str} relation import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///tx#{num_str}_rel.csv' AS row WITH row.block_hash AS block_hash, row.txid AS txid
+                          MATCH (b:`BlockGraph::Model::BlockHeader`:`BlockGraph::Model::ActiveNodeBase` {block_hash: block_hash})
+                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {txid: txid})
+                          MERGE (tx)-[:block]->(b)
+                        ")
+        puts "tx#{num_str} relation import end #{Time.current}"
+      end
+
       def to_payload
         witness? ? serialize_witness_format : serialize_old_format
       end

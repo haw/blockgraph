@@ -29,4 +29,44 @@ RSpec.describe BlockGraph::Model::Transaction do
       expect(subject[-1].lock_time).to eq 101
     end
   end
+
+  describe 'import' do
+    subject(:blocks) {
+      index = BlockGraph::Parser::ChainIndex.new(test_configuration)
+      index.update
+      index.reorg_blocks
+      index.blocks_to_add
+    }
+
+    before do
+      if Dir.glob(File.join(neo4j_dir, "*")).empty?
+        extr = BlockGraph::Util::Extractor.new
+        extr.export(blocks)
+      end
+    end
+
+    context 'import only node' do
+      it 'should be imported tx nodes by csv' do
+        BlockGraph::Model::Transaction.import_node(0)
+        expect(BlockGraph::Model::Transaction.count).to eq 106
+        expect(BlockGraph::Model::Transaction.first.block).to eq nil
+      end
+    end
+
+    context 'import node with relation' do
+      it 'should be imported tx nodes and relations by csv' do
+        BlockGraph::Model::BlockHeader.import_node(0)
+        BlockGraph::Model::Transaction.import_node(0)
+        BlockGraph::Model::TxOut.import_node(0)
+        BlockGraph::Model::TxIn.import_node(0)
+        BlockGraph::Model::Transaction.import_rel(0)
+        BlockGraph::Model::TxOut.import_rel(0)
+        BlockGraph::Model::TxIn.import_rel(0)
+        expect(BlockGraph::Model::Transaction.count).to eq 106
+        expect(BlockGraph::Model::Transaction.first.block).to_not eq nil
+        expect(BlockGraph::Model::Transaction.first.inputs).to_not be_blank
+        expect(BlockGraph::Model::Transaction.first.outputs).to_not be_blank
+      end
+    end
+  end
 end

@@ -89,10 +89,25 @@ module BlockGraph
       file_num = start_num
       file_count = max_csv_file_num("block") - file_num + 1
       file_count.times do |i|
-        puts "import #{file_name_with_num("block", file_num + i)}.csv"
-        BlockGraph::Model::BlockHeader.import(file_name_with_num("block", file_num + i))
-        BlockGraph::Model::Transaction.import(file_name_with_num("tx", file_num + i))
+        BlockGraph::Model::BlockHeader.import_node(file_num + i)
+        BlockGraph::Model::Transaction.import_node(file_num + i)
+        BlockGraph::Model::TxOut.import_node(file_num + i)
+        BlockGraph::Model::TxIn.import_node(file_num + i)
       end
+
+      puts 'import finished'
+    end
+
+    def import_with_relation(start_num = 0)
+      file_num = start_num
+      import(file_num)
+      (max_csv_file_num("block") + 1).times do |i|
+        BlockGraph::Model::BlockHeader.import_rel(i)
+        BlockGraph::Model::Transaction.import_rel(i)
+        BlockGraph::Model::TxOut.import_rel(i)
+        BlockGraph::Model::TxIn.import_rel(i)
+      end
+
       puts 'import finished'
     end
 

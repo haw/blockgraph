@@ -69,6 +69,37 @@ module BlockGraph
         puts "tx inputs import end #{Time.current}"
       end
 
+      def self.import_node(num)
+        num_str = num.is_a?(Integer) ? num.to_s.rjust(5, '0') : num
+        puts "tx inputs#{num_str} import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///tx_inputs#{num_str}.csv' AS row
+                          MERGE (tx:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase`
+                          {
+                            uuid: row.uuid
+                          })
+                          ON CREATE SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.script_sig = row.script_sig, tx.script_witness = row.script_witness, tx.sequence = toInteger(row.sequence), tx.updated_at = timestamp(), tx.created_at = timestamp()
+                          ON MATCH SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.updated_at = timestamp()
+                        ")
+        puts "tx inputs#{num_str} import end #{Time.current}"
+      end
+
+      def self.import_rel(num)
+        num_str = num.is_a?(Integer) ? num.to_s.rjust(5, '0') : num
+        puts "tx inputs#{num_str} relation import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///tx_inputs#{num_str}_rel.csv' AS row WITH row.spent_tx AS spent_id, row.uuid AS uuid
+                          MATCH (tx:`BlockGraph::Model::Transaction`:`BlockGraph::Model::ActiveNodeBase` {uuid: spent_id})
+                          MATCH (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
+                          MERGE (in)-[:transaction]->(tx)
+                        ")
+        puts "tx inputs#{num_str} outpoint import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///tx_inputs#{num_str}.csv' AS row WITH row.uuid AS uuid, row.txid AS txid, toInteger(row.vout) AS vout
+                          MATCH (tx:`BlockGraph::Model::Transaction` {txid: txid})<-[:transaction]-(out:`BlockGraph::Model::TxOut` {n: vout})
+                          MATCH (in:`BlockGraph::Model::TxIn`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
+                          MERGE (out)-[:out_point]->(in)
+                        ")
+        puts "tx inputs#{num_str} relation and outpoint import end #{Time.current}"
+      end
+
       def add_out_point
         return if self.txid.nil? && self.vout.nil?
         tx_out = BlockGraph::Model::TxOut.find_by_outpoint(self.txid, self.vout)

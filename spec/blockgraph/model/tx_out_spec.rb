@@ -41,4 +41,43 @@ RSpec.describe BlockGraph::Model::TxOut do
       expect(out1.script_pubkey).to eq '76a9146375cfa3365448a4c8458db91ac3429575b2e61f88ac'
     end
   end
+
+  describe 'import' do
+    subject(:blocks) {
+      index = BlockGraph::Parser::ChainIndex.new(test_configuration)
+      index.update
+      index.reorg_blocks
+      index.blocks_to_add
+    }
+
+    before do
+      if Dir.glob(File.join(neo4j_dir, "*")).empty?
+        extr = BlockGraph::Util::Extractor.new
+        extr.export(blocks)
+      end
+    end
+
+    context 'import only node' do
+      it 'should be imported tx nodes by csv' do
+        BlockGraph::Model::TxOut.import_node(0)
+        expect(BlockGraph::Model::TxOut.count).to eq 211
+        expect(BlockGraph::Model::TxOut.first.transaction).to eq nil
+        expect(BlockGraph::Model::TxOut.all.spent_input).to eq nil
+      end
+    end
+
+    context 'import node with relation' do
+      it 'should be imported tx nodes and relations by csv' do
+        BlockGraph::Model::Transaction.import_node(0)
+        BlockGraph::Model::TxOut.import_node(0)
+        BlockGraph::Model::TxIn.import_node(0)
+        BlockGraph::Model::Transaction.import_rel(0)
+        BlockGraph::Model::TxOut.import_rel(0)
+        BlockGraph::Model::TxIn.import_rel(0)
+        expect(BlockGraph::Model::TxOut.count).to eq 211
+        expect(BlockGraph::Model::TxOut.first.transaction).to_not eq nil
+        expect(BlockGraph::Model::TxOut.all.spent_input).to_not eq nil
+      end
+    end
+  end
 end

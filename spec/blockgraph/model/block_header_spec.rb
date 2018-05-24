@@ -82,4 +82,37 @@ RSpec.describe BlockGraph::Model::BlockHeader do
     end
   end
 
+  describe 'import' do
+    subject(:blocks) {
+      index = BlockGraph::Parser::ChainIndex.new(test_configuration)
+      index.update
+      index.reorg_blocks
+      index.blocks_to_add
+    }
+
+    before do
+      if Dir.glob(File.join(neo4j_dir, "*")).empty?
+        extr = BlockGraph::Util::Extractor.new
+        extr.export(blocks)
+      end
+    end
+
+    context 'import only node' do
+      it 'should be imported block header nodes by csv' do
+        BlockGraph::Model::BlockHeader.import_node(0)
+        expect(BlockGraph::Model::BlockHeader.count).to eq 103
+        expect(BlockGraph::Model::BlockHeader.latest[0].previous_block).to eq nil
+      end
+    end
+
+    context 'import node with relation' do
+      it 'should be imported block header nodes and relations by csv' do
+        BlockGraph::Model::BlockHeader.import_node(0)
+        BlockGraph::Model::BlockHeader.import_rel(0)
+        expect(BlockGraph::Model::BlockHeader.count).to eq 103
+        expect(BlockGraph::Model::BlockHeader.latest[0].previous_block).to_not eq nil
+      end
+    end
+  end
+
 end
