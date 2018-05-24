@@ -8,7 +8,7 @@ module BlockGraph
       property :script_pubkey
 
       has_one :out, :transaction, type: :transaction, model_class: 'BlockGraph::Model::Transaction'
-      has_one :out, :out_point, type: :spent_input, model_class: 'BlockGraph::Model::TxIn'
+      has_one :out, :spent_input, type: :out_point, model_class: 'BlockGraph::Model::TxIn'
 
       validates :value, :presence => true
       validates :n, :presence => true

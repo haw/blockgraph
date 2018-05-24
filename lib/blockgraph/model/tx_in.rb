@@ -9,7 +9,7 @@ module BlockGraph
       property :script_witness
 
       has_one :out, :transaction, type: :transaction, model_class: 'BlockGraph::Model::Transaction'
-      has_one :in, :out_point, origin: :out_point, model_class: 'BlockGraph::Model::TxOut'
+      has_one :in, :out_point, origin: :spent_input, model_class: 'BlockGraph::Model::TxOut'
 
       validates :sequence, :presence => true
 
