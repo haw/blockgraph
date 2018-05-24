@@ -7,6 +7,8 @@ module BlockGraph
       attr_accessor :old_chain
       attr_accessor :newest_block
 
+      READ_FILE_LIMIT = 4
+
       def initialize(config)
         @config = config
         @block_list = {}
@@ -31,6 +33,7 @@ module BlockGraph
         blocks = []
 
         files = []
+        file_count = READ_FILE_LIMIT if file_count > READ_FILE_LIMIT
         file_count.times do |i|
           files << config.path_for_block_file(file_num + i)
         end
