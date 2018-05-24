@@ -40,6 +40,7 @@ module BlockGraph
         bh.input_num = block.input_count
         bh.output_num = block.output_count
         bh.file_num = block.file_num
+        bh.file_pos = block.file_pos
         bh.previous_block = self.find_by(block_hash: block.header.prev_hash)
         unless bh.genesis_block?
           bh.transactions = BlockGraph::Model::Transaction.builds(block.transactions)
