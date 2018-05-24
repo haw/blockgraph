@@ -52,10 +52,11 @@ module BlockGraph
       }
     end
 
+    # TODO use RPC import
     def run_with_height(max_block_height = 0)
       puts "coming soon start migration. #{Time.now}"
       blocks = parser.update_chain(max_block_height)
-      extr = BlockGraph::Util::Extracter.new
+      extr = BlockGraph::Util::Extractor.new
       extr.export(blocks)
       BlockGraph::Model::BlockHeader.import("block_headers")
       BlockGraph::Model::Transaction.import("transactions")
@@ -67,7 +68,7 @@ module BlockGraph
       loop {
         begin
           blocks = parser.update_chain(0)
-          extr = BlockGraph::Util::Extracter.new
+          extr = BlockGraph::Util::Extractor.new
           extr.export(blocks)
         rescue BlockGraph::Parser::Error => e
           if e.message == '{"code"=>-8, "message"=>"Block height out of range"}'
@@ -84,7 +85,7 @@ module BlockGraph
       loop {
         begin
           blocks = parser.update_chain(0)
-          extr = BlockGraph::Util::Extracter.new
+          extr = BlockGraph::Util::Extractor.new
           extr.export(blocks)
           import(max_csv_file_num("block"))
         rescue BlockGraph::Parser::Error => e

@@ -1,7 +1,7 @@
 module BlockGraph
   module Util
 
-    autoload :Extracter, 'blockgraph/util/extracter'
+    autoload :Extractor, 'blockgraph/util/extractor'
     autoload :FileManager, 'blockgraph/util/file_manager'
     autoload :BlockFileManager, 'blockgraph/util/block_file_manager'
     autoload :TxFileManager, 'blockgraph/util/tx_file_manager'

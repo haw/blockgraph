@@ -1,6 +1,6 @@
 module BlockGraph
   module Util
-    class Extracter
+    class Extractor
 
       attr_accessor :block
       attr_accessor :tx
