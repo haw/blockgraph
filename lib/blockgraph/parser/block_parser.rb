@@ -8,8 +8,6 @@ module BlockGraph
         @configuration = configuration
       end
 
-      def update_chain(max_block_height)
-        chain_index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(configuration)
       def update_chain
         chain_index = BlockGraph::Parser::ChainIndex.new(configuration)
         chain_index.update
