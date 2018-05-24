@@ -22,23 +22,11 @@ module BlockGraph
       BlockGraph::Model.constants.each {|const_name| BlockGraph::Model.const_get(const_name)}
     end
 
+    # TODO use RPC import
     def run
       loop {
-        puts "coming soon start migration. #{Time.now}"
         begin
-          blocks = parser.update_chain
-          blocks.each do |block|
-            puts "start migration for block height #{block.height}. #{Time.now}"
-            Neo4j::ActiveBase.run_transaction do |tx|
-              begin
-                BlockGraph::Model::BlockHeader.create_from_blocks(block)
-                @block_height = blocks[-1].height
-              rescue => e
-                tx.failure
-                raise e
-              end
-            end
-          end
+          run_with_height
         rescue BlockGraph::Parser::Error => e
           if e.message == '{"code"=>-8, "message"=>"Block height out of range"}'
             puts "Block height out of range. sleep #{@sleep_interval} seconds."
@@ -47,8 +35,6 @@ module BlockGraph
             raise e
           end
         end
-        puts
-        puts "end migration for block height #{@block_height}. #{Time.now}"
       }
     end
 
