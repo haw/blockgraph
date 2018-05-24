@@ -2,9 +2,14 @@ require 'base'
 
 namespace :bg do
   desc 'Import specified block to neo4j database.'
-  task :import, [:config_path] do |task, args|
+  task :import, [:mode, :config_path] do |task, args|
     puts "import blocks."
-    get_migration(args.config_path).run
+    migration = get_migration(args.config_path)
+    if args.mode.to_i == 0
+      migration.run
+    elsif args.mode.to_i == 1
+      migration.import_batch
+    end
   end
 
   desc 'Import specified block to neo4j database.'
@@ -56,9 +61,14 @@ namespace :bg do
     get_migration(args.config_path).export
   end
 
-  desc 'Import csv files using batch export'
-  task :import_batch, [:config_path] do |task, args|
-    get_migration(args.config_path).import_batch
+  desc 'Import csv files'
+  task :import_csv, [:start_num, :config_path] do |task, args|
+    get_migration(args.config_path).import(args.start_num.to_i)
+  end
+
+  desc 'Import csv file for updating block height after calculate block height'
+  task :update_height, [:config_path] do |task, args|
+    get_migration(args.config_path).update_height
   end
 
   private

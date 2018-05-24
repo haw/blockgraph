@@ -51,20 +51,9 @@ module BlockGraph
     end
 
     def export
-      loop {
-        begin
-          blocks = parser.update_chain(0)
-          extr = BlockGraph::Util::Extractor.new
-          extr.export(blocks)
-        rescue BlockGraph::Parser::Error => e
-          if e.message == '{"code"=>-8, "message"=>"Block height out of range"}'
-            puts "All blocks export finished"
-            return
-          else
-            raise e
-          end
-        end
-      }
+      blocks = parser.update_chain(0)
+      extr = BlockGraph::Util::Extractor.new
+      extr.export(blocks)
     end
 
     def import_batch
