@@ -38,7 +38,7 @@ module BlockGraph
           files << config.path_for_block_file(file_num + i)
         end
 
-        puts "fetch block start. #{file_count} blk files."
+        puts "fetch block start. #{file_count} blk files. #{Time.current}"
         Parallel.map(files, in_processes: 4, finish: -> (item, i, result){
           @newest_block = result.last if !result.empty? && i == files.length - 1
           file_done += 1
