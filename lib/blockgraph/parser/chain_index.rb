@@ -73,22 +73,25 @@ module BlockGraph
       def self.parse_from_neo4j(config, **option)
         puts "parse from neo4j start #{Time.current}"
         chain_index = self.new(config)
-        block_headers = BlockGraph::Model::BlockHeader.all.oldest
-        block_headers = block_headers.to_a.reject{|b| b.previous_block.blank? && !b.genesis_block?}
-        block_headers.each do |block|
-          txes = []
-          header = Bitcoin::BlockHeader.new(block.version, (block.genesis_block? ? Bitcoin.chain_params.genesis_block.header.prev_hash : block.previous_block.block_hash), block.merkle_root, block.time, block.bits, block.nonce)
-          if option[:tx]
-            block.transactions.order(neo_id: :asc).each do |tx|
-              txes << Bitcoin::Tx.parse_from_payload(tx.to_payload)
-            end
-          end
-          info = BlockGraph::Parser::BlockInfo.new(header, block.size, txes, block.tx_num, block.input_num, block.output_num, block.file_num, block.file_pos)
-          info.height = block.height
-          chain_index.block_list[info.block_hash] = info
-          chain_index.old_chain = chain_index.newest_block = info
+        chain_index.parse(BlockGraph::Model::BlockHeader.find_by(block_hash: Bitcoin.chain_params.genesis_block.header.hash), false)
+        BlockGraph::Model::BlockHeader.where('(result_blockgraphmodelblockheader)-[:`previous_block`]->()').find_each do |block|
+          chain_index.parse(block, !!option[:tx])
         end
+        chain_index.old_chain = chain_index.newest_block = chain_index.block_list.values.max{|b1, b2| b1.height.to_i <=> b2.height.to_i}
         chain_index
+      end
+
+      def parse(block, with_tx)
+        txes = []
+        header = Bitcoin::BlockHeader.new(block.version, (block.genesis_block? ? Bitcoin.chain_params.genesis_block.header.prev_hash : block.previous_block.block_hash), block.merkle_root, block.time, block.bits, block.nonce)
+        if with_tx
+          block.transactions.order(neo_id: :asc).each do |tx|
+            txes << Bitcoin::Tx.parse_from_payload(tx.to_payload)
+          end
+        end
+        info = BlockGraph::Parser::BlockInfo.new(header, block.size, txes, block.tx_num, block.input_num, block.output_num, block.file_num, block.file_pos)
+        info.height = block.height
+        self.block_list[info.block_hash] = info
       end
 
       def generate_chain(max_block_height)
