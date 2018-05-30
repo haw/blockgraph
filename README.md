@@ -75,9 +75,48 @@ Please try again below:
 
 ```
 $ rake neo4j:migrate NEO4J_URL=[YOUR NEO4J URL]
+or
+$ rake neo4j:migrate NEO4J_URL=http://user:password@host:port
 
 # e.g.: Execute the below when testing setup. 
 $ rake neo4j:migrate NEO4J_URL=http://localhost:7475
+```
+
+## Manual build test database
+####OS X
+```
+$ brew install maven
+```
+
+####Ubuntu
+```
+apt install maven openjdk-8-jdk
+```
+
+download: https://github.com/neo4j/neo4j/archive/3.3.zip
+refer how to install: https://github.com/neo4j/neo4j/tree/3.3
+
+```
+$ unzip neo4j-3.3
+$ cd neo4j-3.3
+$ mvn clean install -DskipTests
+$ cd packaging/standalone/target
+$ tar -zxvf neo4j-community-VERSION-unix.tar.gz
+$ mv neo4j-community-VERSION-unix BLOCKGRAPH_HOME/db/neo4j/
+$ cd  BlockGRAPH_HOME/db/neo4j
+$ mv neo4j-community-VERSION-unix test
+```
+
+continue from [change port](#change-port)
+
+## Config Neo4j
+edit `db/neo4j/test/conf/neo4j.conf`
+
+### Change LOAD CSV buffer size
+add parameter
+```
+# supported 3.3.6+
+dbms.import.csv.buffer_size=4194304 # 4MB
 ```
 
 ## Contributing
