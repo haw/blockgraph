@@ -84,7 +84,7 @@ module BlockGraph
         BlockGraph::Model::TxIn.import_node(file_num + i)
       end
 
-      puts 'import finished'
+      puts 'import of node only has finished'
     end
 
     def import_with_relation(start_num = 0)
@@ -97,7 +97,7 @@ module BlockGraph
         BlockGraph::Model::TxIn.import_rel(i)
       end
 
-      puts 'import finished'
+      puts 'import of node and relation has finished'
     end
 
     def update_height
