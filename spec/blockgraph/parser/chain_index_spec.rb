@@ -56,5 +56,11 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
       expect(txes[-1].inputs.length).to eq(1)
       expect(txes[-1].outputs.length).to eq(2)
     end
+
+    it 'should set latest block to old chain' do
+      index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(test_configuration, tx: true)
+      expect(index.old_chain.block_hash).to eq('281dcd1e9124deef18140b754eab0550c46d6bd55e815415266c89d8faaf1f2d'.rhex)
+      expect(index.old_chain.height).to eq(102)
+    end
   end
 end
