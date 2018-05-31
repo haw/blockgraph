@@ -4,6 +4,7 @@ module BlockGraph
     attr_accessor :neo4j_server
 
     def initialize
+      @extensions = []
       @neo4j_server = 'http://localhost:7474'
     end
 
