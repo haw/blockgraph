@@ -73,11 +73,20 @@ module BlockGraph
       def self.parse_from_neo4j(config, **option)
         puts "parse from neo4j start #{Time.current}"
         chain_index = self.new(config)
-        chain_index.parse(BlockGraph::Model::BlockHeader.find_by(block_hash: Bitcoin.chain_params.genesis_block.header.hash), false)
-        BlockGraph::Model::BlockHeader.where('(result_blockgraphmodelblockheader)-[:`previous_block`]->()').find_each do |block|
+        BlockGraph::Model::BlockHeader.where('(result_blockgraphmodelblockheader)-[:`previous_block`]->()').where(height: nil).find_each do |block|
           chain_index.parse(block, !!option[:tx])
         end
-        chain_index.old_chain = chain_index.newest_block = chain_index.block_list.values.max{|b1, b2| b1.height.to_i <=> b2.height.to_i}
+        chain_index.old_chain = BlockGraph::Model::BlockHeader.where_not(height: nil).latest[0]
+        if chain_index.old_chain.blank?
+          BlockGraph::Model::BlockHeader.where(block_hash: Bitcoin.chain_params.genesis_block.header.hash).each do |block|
+            chain_index.parse(block, !!option[:tx])
+          end
+        else
+          BlockGraph::Model::BlockHeader.where(height: chain_index.old_chain.height).each do |block|
+            chain_index.parse(block, !!option[:tx])
+          end
+          chain_index.newest_block = chain_index.block_list.values.find{|b| b.height == chain_index.old_chain.height}
+        end
         chain_index
       end
 
@@ -110,7 +119,7 @@ module BlockGraph
 
         hash = max_height_block.block_hash
 
-        while hash != Bitcoin.chain_params.genesis_block.header.prev_hash
+        while hash != (old_chain.blank? ? Bitcoin.chain_params.genesis_block.header.prev_hash : old_chain.block_hash)
           block = block_list[hash]
           chain << block
           hash = Bitcoin::BlockHeader.parse_from_payload(block.header.to_payload).prev_hash
@@ -128,7 +137,6 @@ module BlockGraph
 
       def blocks_to_add
         chain_blocks = generate_chain(0)
-        chain_blocks = chain_blocks[(old_chain.height + 1)..-1] if old_chain
         chain_blocks
       end
 
@@ -145,10 +153,16 @@ module BlockGraph
 
         puts 'calculate block height.'
 
-        genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
-        block_list[genesis_hash].height = 0
+        queue = block_list.values.select{|b| b.height.present?}
 
-        queue = [[genesis_hash, 0]]
+        if queue.blank?
+          genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
+          block_list[genesis_hash].height = 0
+
+          queue = [[genesis_hash, 0]]
+        else
+          queue.map!{|b| [b.header.prev_hash, b.height]}
+        end
 
         until queue.empty?
           block_hash, height = queue.pop
