@@ -104,12 +104,6 @@ module BlockGraph
       blocks = parser.update_height
       extr = BlockGraph::Util::Extractor.new
       extr.export_update(blocks)
-      file_count = max_csv_file_num("block") + 1
-      file_count.times do |i|
-        puts "import #{file_name_with_num("block", i)}.csv"
-        BlockGraph::Model::BlockHeader.import_rel(i)
-        BlockGraph::Model::Transaction.import_rel(i)
-      end
       BlockGraph::Model::BlockHeader.update
 
       puts 'block height has updated'
