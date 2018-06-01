@@ -21,15 +21,17 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+
+  spec.add_runtime_dependency "activesupport"
+  spec.add_runtime_dependency "parallel"
+  spec.add_runtime_dependency "neo4j", "~> 9.2.4"
+  spec.add_runtime_dependency "neo4j-rake_tasks"
+  spec.add_runtime_dependency "bitcoinrb", "~> 0.1.6"
+  spec.add_runtime_dependency "thor"
+  spec.add_runtime_dependency "daemon-spawn"
+
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "neo4j", "~> 9.2.4"
-  spec.add_development_dependency "neo4j-rake_tasks"
-  spec.add_development_dependency "bitcoinrb", "~> 0.1.6"
-  spec.add_development_dependency "thor"
-  spec.add_development_dependency "daemon-spawn"
-  spec.add_development_dependency "activesupport", "~> 5.1.6"
   spec.add_development_dependency "octorelease"
-  spec.add_development_dependency "parallel", "~> 1.12.1"
 end
