@@ -83,12 +83,12 @@ $ rake neo4j:migrate NEO4J_URL=http://localhost:7475
 ```
 
 ## Manual build test database
-####OS X
+#### OS X
 ```
 $ brew install maven
 ```
 
-####Ubuntu
+#### Ubuntu
 ```
 apt install maven openjdk-8-jdk
 ```
