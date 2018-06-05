@@ -3,6 +3,7 @@ require 'bitcoin'
 require 'parallel'
 require 'neo4j'
 require 'neo4j/core/cypher_session/adaptors/http'
+require 'blockgraph/railtie' if defined?(Rails)
 
 module BlockGraph
   autoload :CLI, 'blockgraph/cli'
