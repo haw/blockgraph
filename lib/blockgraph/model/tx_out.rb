@@ -48,7 +48,7 @@ module BlockGraph
                           ON CREATE SET tx.value = toFloat(row.value), tx.n = toInteger(row.n), tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp(), tx.created_at = timestamp()
                           ON MATCH SET tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp()
                         ")
-        CSV.foreach(File.expand_path("#{file_name}_large.csv", self.neo4j_query('CALL dbms.listConfig() yield name,value WHERE name=~"dbms.directories.import" RETURN value').rows.first), headers: true) do |csv|
+        CSV.foreach(File.join(self.neo4j_query('CALL dbms.listConfig() yield name,value WHERE name=~"dbms.directories.import" RETURN value').rows.first, "#{file_name}_large.csv"), headers: true) do |csv|
           self.neo4j_query("MERGE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
                             {uuid: '#{csv["uuid"]}'})
                             ON CREATE SET tx.value = toFloat(#{csv["value"]}), tx.n = toInteger(#{csv["n"]}), tx.script_pubkey = '#{csv["script_pubkey"]}', tx.updated_at = timestamp(), tx.created_at = timestamp()
@@ -75,7 +75,7 @@ module BlockGraph
                           ON CREATE SET tx.value = toFloat(row.value), tx.n = toInteger(row.n), tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp(), tx.created_at = timestamp()
                           ON MATCH SET tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp()
                         ")
-        CSV.foreach(File.expand_path("tx_outputs#{num_str}}_large.csv", self.neo4j_query('CALL dbms.listConfig() yield name,value WHERE name=~"dbms.directories.import" RETURN value').rows.first), headers: true) do |csv|
+        CSV.foreach(File.join(self.neo4j_query('CALL dbms.listConfig() yield name,value WHERE name=~"dbms.directories.import" RETURN value').rows.first, "tx_outputs#{num_str}_large.csv"), headers: true) do |csv|
           self.neo4j_query("MERGE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
                             {uuid: '#{csv["uuid"]}'})
                             ON CREATE SET tx.value = toFloat(#{csv["value"]}), tx.n = toInteger(#{csv["n"]}), tx.script_pubkey = '#{csv["script_pubkey"]}', tx.updated_at = timestamp(), tx.created_at = timestamp()
