@@ -102,12 +102,12 @@ module BlockGraph
 
       def self.update
         puts "block height update begin #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///block_height_update.csv' AS row
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///block_height_update.csv' AS row WITH row.block_hash AS block_hash, toInteger(row.height) AS height
                           MATCH (b:`BlockGraph::Model::BlockHeader`:`BlockGraph::Model::ActiveNodeBase`
                           {
-                            block_hash: row.block_hash
+                            block_hash: block_hash
                           })
-                          SET b.height = toInteger(row.height), b.updated_at = timestamp()
+                          SET b.height = height, b.updated_at = timestamp()
                         ")
         puts "block height update end #{Time.current}"
       end
