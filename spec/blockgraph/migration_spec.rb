@@ -12,7 +12,6 @@ RSpec.describe BlockGraph::Migration do
       }
       it do
         expect(subject.neo4j_server).to eq('http://localhost:7475')
-        expect(subject.extensions).to be_empty
       end
     end
   end
