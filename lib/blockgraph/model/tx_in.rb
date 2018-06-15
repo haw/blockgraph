@@ -18,7 +18,7 @@ module BlockGraph
       def self.create_from_tx(tx)
         tx_in = new
         unless tx.coinbase?
-          tx_in.txid = tx.out_point.hash
+          tx_in.txid = tx.out_point.txid
           tx_in.vout = tx.out_point.index
         end
         tx_in.script_sig = tx.script_sig.to_hex
@@ -34,7 +34,7 @@ module BlockGraph
         txes.map{|tx|
           tx_in = new
           unless tx.coinbase?
-            tx_in.txid = tx.out_point.hash
+            tx_in.txid = tx.out_point.txid
             tx_in.vout = tx.out_point.index
           end
           tx_in.script_sig = tx.script_sig.to_hex
@@ -110,7 +110,7 @@ module BlockGraph
       end
 
       def to_payload(script_sig = self.script_sig, sequence = self.sequence)
-        p = self.txid.blank? && self.vout.blank? ? Bitcoin::OutPoint.create_coinbase_outpoint.to_payload : Bitcoin::OutPoint.new(self.txid, self.vout).to_payload
+        p = self.txid.blank? && self.vout.blank? ? Bitcoin::OutPoint.create_coinbase_outpoint.to_payload : Bitcoin::OutPoint.from_txid(self.txid, self.vout).to_payload
         p << Bitcoin.pack_var_int(script_sig.htb.bytesize)
         p << script_sig.htb << [sequence].pack('V')
         p
