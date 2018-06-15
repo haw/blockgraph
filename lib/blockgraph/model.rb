@@ -2,6 +2,7 @@ module BlockGraph
   module Model
 
     autoload :ActiveNodeBase, 'blockgraph/model/active_node_base'
+    autoload :AssetId, 'blockgraph/model/asset_id'
     autoload :BlockHeader, 'blockgraph/model/block_header'
     autoload :Extensions, 'blockgraph/model/extensions'
     autoload :Transaction, 'blockgraph/model/transaction'

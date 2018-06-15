@@ -7,8 +7,12 @@ module BlockGraph
       property :n, type: Integer
       property :script_pubkey
 
+      property :asset_quantity, type: Integer
+      property :oa_output_type
+
       has_one :out, :transaction, type: :transaction, model_class: 'BlockGraph::Model::Transaction'
       has_one :out, :spent_input, type: :out_point, model_class: 'BlockGraph::Model::TxIn'
+      has_one :out, :asset_id, type: :asset_id, model_class: 'BlockGraph::Model::AssetId'
 
       validates :value, :presence => true
       validates :n, :presence => true
@@ -22,6 +26,17 @@ module BlockGraph
         end
         tx_out.save!
         tx_out
+      end
+
+      def apply_oa_attributes(oa_out)
+        self.asset_quantity = oa_out.asset_quantity
+        self.asset_id = oa_out.asset_id.nil? ? nil : AssetId.find_or_create(oa_out.asset_id)
+        if self.asset_id.nil? && oa_out.output_type != BlockGraph::Constants::OutputType::MARKER_OUTPUT
+          self.oa_output_type = BlockGraph::Constants::OutputType.output_type_label(BlockGraph::Constants::OutputType::UNCOLORED)
+        else
+          self.oa_output_type = BlockGraph::Constants::OutputType.output_type_label(oa_out.output_type)
+        end
+        save!
       end
 
       def self.builds(txes)

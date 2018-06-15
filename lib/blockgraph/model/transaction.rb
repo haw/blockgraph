@@ -132,6 +132,13 @@ module BlockGraph
         self.inputs.map { |i| Bitcoin::ScriptWitness.new(i.script_witness.split(' ')).to_payload }.join
       end
 
+      def openassets_tx?
+        return true unless self.outputs.asset_id.blank?
+        false
+        # outputs.each {|o| return true unless o.asset_id.nil?}
+        # false
+      end
+
     end
   end
 end

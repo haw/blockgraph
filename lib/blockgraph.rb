@@ -13,6 +13,8 @@ module BlockGraph
   autoload :Model, 'blockgraph/model'
   autoload :Parser, 'blockgraph/parser'
   autoload :Util, 'blockgraph/util'
+  autoload :OpenAssets, 'blockgraph/open_assets'
+  autoload :Constants, 'blockgraph/constants'
 
   def self.configuration
     @configuration ||= BlockGraph::Configuration.new
