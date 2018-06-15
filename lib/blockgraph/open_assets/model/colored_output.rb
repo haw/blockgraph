@@ -14,6 +14,8 @@ module BlockGraph
         attr_accessor :asset_definition_url
         attr_accessor :asset_definition
 
+        alias :script_pubkey :script
+        
         def initialize(value, script, asset_id = nil, asset_quantity = 0, output_type = BlockGraph::Constants::OutputType::UNCOLORED, metadata = '')
           raise ArgumentError, "invalid output_type : #{output_type}" unless BlockGraph::Constants::OutputType.all.include?(output_type)
           raise ArgumentError, "invalid asset_quantity. asset_quantity should be unsignd integer. " unless asset_quantity.between?(0, 2 ** 63 -1)
