@@ -59,6 +59,7 @@ $ rake neo4j:generate_schema_migration[constraint,BlockGraph::Model::ActiveNodeB
 $ rake neo4j:generate_schema_migration[index,BlockGraph::Model::BlockHeader,height]
 $ rake neo4j:generate_schema_migration[index,BlockGraph::Model::BlockHeader,block_hash]
 $ rake neo4j:generate_schema_migration[index,BlockGraph::Model::Transaction,txid]
+$ rake neo4j:generate_schema_migration[index,BlockGraph::Model::AssetId,asset_id]
 ```
 
 ### migrate database
