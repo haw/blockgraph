@@ -71,15 +71,14 @@ module BlockGraph
               in_rel << [in_uuid, tx_uuid]
             end
 
-            outputs = BlockGraph::OpenAssets::Util.get_color_outputs_from_tx(tx)
-            outputs.each_with_index do |tx_out, n|
+            tx.outputs.each_with_index do |tx_out, n|
               out_uuid = SecureRandom.uuid
               if tx_out.script_pubkey.present? && tx_out.script_pubkey.to_hex.size > 2097152
-                out_large_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.to_hex, tx_out.asset_quantity, tx_out.output_type]
+                out_large_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.to_hex]
               else
-                out_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.present? ? tx_out.script_pubkey.to_hex : '', tx_out.asset_quantity, tx_out.output_type]
+                out_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.present? ? tx_out.script_pubkey.to_hex : '']
               end
-              out_rel << [out_uuid, tx_uuid, tx_out.asset_id]
+              out_rel << [out_uuid, tx_uuid]
             end
           end
           [block_node, block_rel, tx_node, tx_rel, in_node, in_rel, out_node, out_large_node, out_rel]

@@ -9,9 +9,9 @@ module BlockGraph
       end
 
       def insert_header
-        node_file << ["uuid", "value", "n", "script_pubkey", "asset_quantity", "outputy_type"]
-        large_node_file << ["uuid", "value", "n", "script_pubkey", "asset_quantity", "outputy_type"]
-        rel_file << ["uuid", "transaction", "asset_id"]
+        node_file << ["uuid", "value", "n", "script_pubkey"]
+        large_node_file << ["uuid", "value", "n", "script_pubkey"]
+        rel_file << ["uuid", "transaction"]
       end
 
       def open(file_name, mode = "r", **opt)
