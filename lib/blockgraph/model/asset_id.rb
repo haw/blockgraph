@@ -19,6 +19,18 @@ module BlockGraph
         a
       end
 
+      def self.import_rel(num)
+        num_str = num.is_a?(Integer) ? num.to_s.rjust(5, '0') : num
+        puts "tx outputs#{num_str} assets import begin #{Time.current}"
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///tx_outputs#{num_str}_rel.csv' AS row WITH row.uuid AS uuid, row.asset_id AS asset_id
+                          WHERE NOT asset_id = ''
+                          MATCH (out:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
+                          MERGE (asset:`BlockGraph::Model::AssetId`:`BlockGraph::Model::ActiveNodeBase` {asset_id: asset_id})
+                          MERGE (out)-[:asset_id]->(asset)
+                        ")
+        puts "tx outputs#{num_str} assets import end #{Time.current}"
+      end
+
       def issuance_txs
         outputs.select{|o| o.oa_output_type == 'issuance'}.map(&:transaction)
             .uniq{|tx| tx.txid}.sort{|a, b| b.block.time <=> a.block.time}

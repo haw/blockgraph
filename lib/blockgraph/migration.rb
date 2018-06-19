@@ -94,6 +94,7 @@ module BlockGraph
         BlockGraph::Model::BlockHeader.import_rel(i)
         BlockGraph::Model::Transaction.import_rel(i)
         BlockGraph::Model::TxOut.import_rel(i)
+        BlockGraph::Model::AssetId.import_rel(i)
         BlockGraph::Model::TxIn.import_rel(i)
       end
 
