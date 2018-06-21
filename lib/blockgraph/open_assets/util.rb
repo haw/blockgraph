@@ -33,6 +33,21 @@ module BlockGraph
           tx.outputs.map{|out| BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)}
         end
 
+        def to_color_outputs(tx)
+          unless tx.coinbase_tx?
+            i = tx.outputs.index{|out| out.script_pubkey.op_return_data.present?}
+            colored = []
+            marker_output = ::OpenAssets::Payload.parse_from_payload(tx.outputs[i].script_pubkey.op_return_data) if i
+            unless marker_output.nil?
+              (0...i).each {|j| colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, marker_output.quantities[j], BlockGraph::Constants::OutputType::ISSUANCE)}
+              colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::MARKER_OUTPUT)
+              ((i + 1)...tx.outputs.size).each {|j| colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, marker_output.quantities[j-1], BlockGraph::Constants::OutputType::TRANSFER)}
+              return colored
+            end
+          end
+          tx.outputs.map{|out| BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)}
+        end
+
         # @param[Array[Bitcoin::TxOut]] prev_outs The array of uncolored outputs.
         # @param[Integer] marker_output_index The integer index of marker output in transaction outputs.
         # @param[Bitcoin:Tx] tx The transaction is a starting point for determining the asset id.

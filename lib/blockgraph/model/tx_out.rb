@@ -8,7 +8,7 @@ module BlockGraph
       property :script_pubkey
 
       property :asset_quantity, type: Integer
-      property :output_type
+      property :output_type, type: Integer
 
       has_one :out, :transaction, type: :transaction, model_class: 'BlockGraph::Model::Transaction'
       has_one :out, :spent_input, type: :out_point, model_class: 'BlockGraph::Model::TxIn'
@@ -57,19 +57,20 @@ module BlockGraph
 
       def self.import(file_name)
         puts "tx outputs import begin #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row WITH row.value AS value, row.n AS n,
+                          row.script_pubkey AS script_pubkey, row.asset_quantity AS asset_quantity, row.output_type AS outputy_type
                           MERGE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
                           {
                             uuid: row.uuid
                           })
-                          ON CREATE SET tx.value = toFloat(row.value), tx.n = toInteger(row.n), tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp(), tx.created_at = timestamp()
-                          ON MATCH SET tx.script_pubkey = row.script_pubkey, tx.updated_at = timestamp()
+                          ON CREATE SET tx.value = toFloat(value), tx.n = toInteger(n), tx.script_pubkey = script_pubkey, tx.asset_quantity = toInteger(asset_quantity), tx.output_type = toInteger(output_type), tx.updated_at = timestamp(), tx.created_at = timestamp()
+                          ON MATCH SET tx.value = toFloat(value), tx.n = toInteger(n), tx.script_pubkey = script_pubkey, tx.asset_quantity = toInteger(asset_quantity), tx.output_type = toInteger(output_type), tx.updated_at = timestamp()
                         ")
         CSV.foreach(File.join(self.neo4j_query('CALL dbms.listConfig() yield name,value WHERE name=~"dbms.directories.import" RETURN value').rows.first, "#{file_name}_large.csv"), headers: true) do |csv|
           self.neo4j_query("MERGE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
                             {uuid: '#{csv["uuid"]}'})
-                            ON CREATE SET tx.value = toFloat(#{csv["value"]}), tx.n = toInteger(#{csv["n"]}), tx.script_pubkey = '#{csv["script_pubkey"]}', tx.updated_at = timestamp(), tx.created_at = timestamp()
-                            ON MATCH SET tx.script_pubkey = '#{csv["script_pubkey"]}', tx.updated_at = timestamp()
+                            ON CREATE SET tx.value = toFloat(#{csv["value"]}), tx.n = toInteger(#{csv["n"]}), tx.script_pubkey = #{csv["script_pubkey"]}, tx.asset_quantity = toInteger(#{csv["asset_quantity"]}), tx.output_type = toInteger(#{csv["output_type"]}), tx.updated_at = timestamp(), tx.created_at = timestamp()
+                            ON MATCH SET tx.value = toFloat(#{csv["value"]}), tx.n = toInteger(#{csv["n"]}), tx.script_pubkey = '#{csv["script_pubkey"]}', tx.asset_quantity = toInteger(#{csv["asset_quantity"]}), tx.output_type = toInteger(#{csv["output_type"]}) tx.updated_at = timestamp()
                           ")
         end
         puts "tx outputs relation import begin #{Time.current}"
