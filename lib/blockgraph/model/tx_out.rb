@@ -58,7 +58,7 @@ module BlockGraph
       def self.import(file_name)
         puts "tx outputs import begin #{Time.current}"
         self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///#{file_name}.csv' AS row WITH row.value AS value, row.n AS n,
-                          row.script_pubkey AS script_pubkey, row.asset_quantity AS asset_quantity, row.output_type AS outputy_type
+                          row.script_pubkey AS script_pubkey, row.asset_quantity AS asset_quantity, row.output_type AS output_type
                           MERGE (tx:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase`
                           {
                             uuid: row.uuid
