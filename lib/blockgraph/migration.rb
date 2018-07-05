@@ -10,7 +10,6 @@ module BlockGraph
     def initialize(config)
       BlockGraph.configure do |c|
         c.neo4j_server = config[:neo4j][:server]
-        c.extensions = config[:extensions] unless config[:extensions].nil?
       end
       configuration = BlockGraph::Parser::Configuration.new(config[:bitcoin][:out_dir], config[:bitcoin][:coin_dir])
       @parser = BlockGraph::Parser::BlockParser.new(configuration)
@@ -94,7 +93,6 @@ module BlockGraph
         BlockGraph::Model::BlockHeader.import_rel(i)
         BlockGraph::Model::Transaction.import_rel(i)
         BlockGraph::Model::TxOut.import_rel(i)
-        BlockGraph::Model::AssetId.import_rel(i)
         BlockGraph::Model::TxIn.import_rel(i)
       end
 
