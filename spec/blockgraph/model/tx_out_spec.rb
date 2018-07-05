@@ -73,7 +73,6 @@ RSpec.describe BlockGraph::Model::TxOut do
         BlockGraph::Model::TxIn.import_node(0)
         BlockGraph::Model::Transaction.import_rel(0)
         BlockGraph::Model::TxOut.import_rel(0)
-        BlockGraph::Model::AssetId.import_rel(0)
         BlockGraph::Model::TxIn.import_rel(0)
         expect(BlockGraph::Model::TxOut.count).to eq 211
         expect(BlockGraph::Model::TxOut.first.transaction).to_not eq nil
