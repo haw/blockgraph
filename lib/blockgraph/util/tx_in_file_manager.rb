@@ -7,7 +7,7 @@ module BlockGraph
       end
 
       def insert_header
-        node_file << ["uuid", "script_sig", "script_witness", "sequence", "vout", "txid"]
+        node_file << ["uuid", "script_sig", "script_witness", "sequence", "vout", "txid", "index"]
         rel_file << ["uuid", "spent_tx"]
       end
 

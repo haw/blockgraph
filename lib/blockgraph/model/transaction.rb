@@ -7,6 +7,7 @@ module BlockGraph
       property :marker, type: Integer
       property :flag, type: Integer
       property :lock_time, type: Integer
+      property :index, type: Integer
 
       has_one :out, :block, type: :block, model_class: 'BlockGraph::Model::BlockHeader'
       has_many :in, :inputs, origin: :transaction, model_class: 'BlockGraph::Model::TxIn', dependent: :destroy
@@ -21,15 +22,16 @@ module BlockGraph
       MARKER = 0x00
       FLAG = 0x01
 
-      def self.create_from_tx(tx)
+      def self.create_from_tx(tx, idx)
         transaction = new
         transaction.txid = tx.txid
         transaction.version = tx.version
         transaction.marker = tx.marker
         transaction.flag = tx.flag
         transaction.lock_time = tx.lock_time
-        tx.inputs.each do |i|
-          transaction.inputs << BlockGraph::Model::TxIn.create_from_tx(i)
+        transaction.index = idx
+        tx.inputs.each_with_index do |i, n|
+          transaction.inputs << BlockGraph::Model::TxIn.create_from_tx(i, n)
         end
         tx.outputs.each_with_index do |o, n|
           transaction.outputs << BlockGraph::Model::TxOut.create_from_tx(o, n)
@@ -38,10 +40,11 @@ module BlockGraph
         transaction
       end
 
-      def self.builds(txes)
+      def self.builds(txs)
         # Don't save this method.
         # return Array for BlockGraph::Model::Transaction association.
-        txes.map{|tx|
+        ret = []
+        txs.each_with_index do |tx|
           transaction = new
           transaction.txid = tx.txid
           transaction.version = tx.version
@@ -50,8 +53,9 @@ module BlockGraph
           transaction.lock_time = tx.lock_time
           transaction.inputs = BlockGraph::Model::TxIn.builds(tx.inputs)
           transaction.outputs = BlockGraph::Model::TxOut.builds(tx.outputs)
-          transaction
-        }
+          ret << transaction
+        end
+        ret
       end
 
       def self.import(file_name)
@@ -61,7 +65,7 @@ module BlockGraph
                           {
                             txid: row.txid
                           })
-                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInteger(row.version), tx.lock_time = toInteger(row.lock_time), tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
+                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInteger(row.version), tx.lock_time = toInteger(row.lock_time), tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.index = toInteger(row.index), tx.updated_at = timestamp()
                           ON MATCH SET tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
                         ")
         puts "transaction relation import begin #{Time.current}"
@@ -83,7 +87,7 @@ module BlockGraph
                           {
                             txid: row.txid
                           })
-                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInteger(row.version), tx.lock_time = toInteger(row.lock_time), tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
+                          ON CREATE SET tx.uuid = row.uuid, tx.created_at = timestamp(), tx.version = toInteger(row.version), tx.lock_time = toInteger(row.lock_time), tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.index = toInteger(row.index), tx.updated_at = timestamp()
                           ON MATCH SET tx.marker = toInteger(row.marker), tx.flag = toInteger(row.flag), tx.updated_at = timestamp()
                         ")
         puts "tx#{num_str} import end #{Time.current}"
@@ -112,7 +116,7 @@ module BlockGraph
       # serialize tx with old tx format
       def serialize_old_format
         buf = [self.version].pack('V')
-        buf << Bitcoin.pack_var_int(self.inputs.length) << self.inputs.order(vout: :asc).map(&:to_payload).join
+        buf << Bitcoin.pack_var_int(self.inputs.length) << self.inputs.order(index: :asc).map(&:to_payload).join
         buf << Bitcoin.pack_var_int(self.outputs.length) << self.outputs.order(n: :asc).map(&:to_payload).join
         buf << [self.lock_time].pack('V')
         buf
@@ -122,7 +126,7 @@ module BlockGraph
       # https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki
       def serialize_witness_format
         buf = [self.version, MARKER, FLAG].pack('Vcc')
-        buf << Bitcoin.pack_var_int(self.inputs.length) << self.inputs.order(vout: :asc).map(&:to_payload).join
+        buf << Bitcoin.pack_var_int(self.inputs.length) << self.inputs.order(index: :asc).map(&:to_payload).join
         buf << Bitcoin.pack_var_int(self.outputs.length) << self.outputs.order(n: :asc).map(&:to_payload).join
         buf << witness_payload << [self.lock_time].pack('V')
         buf

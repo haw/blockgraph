@@ -7,6 +7,7 @@ module BlockGraph
       property :script_sig
       property :sequence, type: Integer
       property :script_witness
+      property :index, type: Integer
 
       has_one :out, :transaction, type: :transaction, model_class: 'BlockGraph::Model::Transaction'
       has_one :in, :out_point, origin: :spent_input, model_class: 'BlockGraph::Model::TxOut'
@@ -15,7 +16,7 @@ module BlockGraph
 
       after_create :add_out_point
 
-      def self.create_from_tx(tx)
+      def self.create_from_tx(tx, n)
         tx_in = new
         unless tx.coinbase?
           tx_in.txid = tx.out_point.txid
@@ -24,6 +25,7 @@ module BlockGraph
         tx_in.script_sig = tx.script_sig.to_hex
         tx_in.script_witness = tx.script_witness.payload unless tx.script_witness.empty?
         tx_in.sequence = tx.sequence
+        tx_in.index = n
         tx_in.save!
         tx_in
       end
@@ -31,7 +33,8 @@ module BlockGraph
       def self.builds(txes)
         # Don't save this method.
         # return Array for BlockGraph::Model::TxIn association.
-        txes.map{|tx|
+        inputs = []
+        txes.each_with_index do |tx, i|
           tx_in = new
           unless tx.coinbase?
             tx_in.txid = tx.out_point.txid
@@ -40,8 +43,10 @@ module BlockGraph
           tx_in.script_sig = tx.script_sig.to_hex
           tx_in.script_witness = tx.script_witness.payload unless tx.script_witness.empty?
           tx_in.sequence = tx.sequence
-          tx_in
-        }
+          tx_in.index = i
+          inputs << tx_in
+        end
+        inputs
       end
 
       def self.import(file_name)
@@ -51,7 +56,7 @@ module BlockGraph
                           {
                             uuid: row.uuid
                           })
-                          ON CREATE SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.script_sig = row.script_sig, tx.script_witness = row.script_witness, tx.sequence = toInteger(row.sequence), tx.updated_at = timestamp(), tx.created_at = timestamp()
+                          ON CREATE SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.script_sig = row.script_sig, tx.script_witness = row.script_witness, tx.sequence = toInteger(row.sequence), tx.index = toInteger(row.index), tx.updated_at = timestamp(), tx.created_at = timestamp()
                           ON MATCH SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.updated_at = timestamp()
                         ")
         puts "tx inputs relation import begin #{Time.current}"
@@ -77,7 +82,7 @@ module BlockGraph
                           {
                             uuid: row.uuid
                           })
-                          ON CREATE SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.script_sig = row.script_sig, tx.script_witness = row.script_witness, tx.sequence = toInteger(row.sequence), tx.updated_at = timestamp(), tx.created_at = timestamp()
+                          ON CREATE SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.script_sig = row.script_sig, tx.script_witness = row.script_witness, tx.sequence = toInteger(row.sequence), tx.index = toInteger(row.index), tx.updated_at = timestamp(), tx.created_at = timestamp()
                           ON MATCH SET tx.txid = row.txid, tx.vout = toInteger(row.vout), tx.updated_at = timestamp()
                         ")
         puts "tx inputs#{num_str} import end #{Time.current}"
