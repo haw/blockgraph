@@ -71,6 +71,12 @@ namespace :bg do
     get_migration(args.config_path).update_height
   end
 
+  desc 'Import csv file for updating tx outputs with open assets'
+  task :update_asset_ids, [:config_path] do |task, args|
+    puts 'update asset ids run'
+    get_migration(args.config_path).update_asset_ids
+  end
+
   private
   def get_migration(config_path)
     config = YAML.load(File.read(config_path)).deep_symbolize_keys[:blockgraph]

@@ -108,6 +108,17 @@ module BlockGraph
       puts 'block height has updated'
     end
 
+    def update_asset_ids
+      BlockGraph::Model::TxOut.where(output_type: [2, 3]).transaction.query_as(:n).return("DISTINCT n").find_in_batches(:n, :uuid, batch_size: 10000) do |batch|
+        txs = batch.map(&:n)
+        oa_extr = BlockGraph::OpenAssets::Util::Extractor.new
+        oa_extr.export_asset_ids(txs)
+        BlockGraph::Model::AssetId.update
+      end
+
+      puts 'tx outs have updated with asset id'
+    end
+
     private
 
     def neo4j_timeout_ops(config)
