@@ -15,6 +15,7 @@ module BlockGraph
   autoload :Util, 'blockgraph/util'
   autoload :OpenAssets, 'blockgraph/open_assets'
   autoload :Constants, 'blockgraph/constants'
+  autoload :Cache, 'blockgraph/cache'
 
   def self.configuration
     @configuration ||= BlockGraph::Configuration.new
