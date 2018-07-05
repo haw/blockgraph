@@ -2,6 +2,8 @@ module BlockGraph
   module OpenAssets
     module Util
 
+      autoload :Extractor, 'blockgraph/open_assets/util/extractor'
+
       # version byte for Open Assets Address
       OA_VERSION_BYTE = 23
       OA_VERSION_BYTE_TESTNET = 115

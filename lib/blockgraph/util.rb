@@ -7,5 +7,6 @@ module BlockGraph
     autoload :TxFileManager, 'blockgraph/util/tx_file_manager'
     autoload :TxInFileManager, 'blockgraph/util/tx_in_file_manager'
     autoload :TxOutFileManager, 'blockgraph/util/tx_out_file_manager'
+    autoload :OpenAssetsFileManager, 'blockgraph/util/open_assets_file_manager'
   end
 end
