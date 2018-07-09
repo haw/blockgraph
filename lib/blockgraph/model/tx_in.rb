@@ -120,6 +120,10 @@ module BlockGraph
         p << script_sig.htb << [sequence].pack('V')
         p
       end
+
+      def coinbase?
+        self.txid.blank? && self.vout.blank?
+      end
     end
   end
 end
