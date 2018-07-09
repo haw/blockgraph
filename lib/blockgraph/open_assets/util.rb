@@ -12,31 +12,8 @@ module BlockGraph
         @@cache = BlockGraph::OpenAssets::Cache::ColoredOutput.new
 
         # @param[String] txid The transaction id is used by finding from DB.
-        # @param[Integer] output_index The index is specify index of transaction output.
+        # @param[Integer] n The index is specify index of transaction output.
         # @return[Array[BlockGraph::OpenAssets::Model::ColoredOutput]] Return the color output translated uncolored output.
-        def get_output(txid, output_index)
-          tx = to_bitcoin_tx(to_payload(find_tx(txid)))
-          colored_outputs = get_color_outputs_from_tx(tx)
-          colored_outputs[output_index]
-        end
-
-        # @param[Bitcoin::Tx] tx The transaction translate BlockGraph::OpenAssets::Model::ColoredOutput.
-        # @return[Array[BlockGraph::OpenAssets::Model::ColoredOutput]] Return array of the color outputs.
-        def get_color_outputs_from_tx(tx)
-          unless tx.coinbase_tx?
-            tx.outputs.each_with_index { |out, i|
-              marker_output_payload = out.script_pubkey.op_return_data
-              unless marker_output_payload.nil?
-                marker_output = ::OpenAssets::Payload.parse_from_payload(marker_output_payload)
-                prev_outs = tx.inputs.map {|input| get_output(input.out_point.txid, input.out_point.index)}
-                asset_ids = compute_asset_ids(prev_outs, i, tx, marker_output.quantities)
-                return asset_ids unless asset_ids.nil?
-              end
-            }
-          end
-          tx.outputs.map{|out| BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)}
-        end
-
         def get_colored_output(txid, n)
           colored = @@cache.get_output(txid, n)
           return colored unless colored.blank?
@@ -46,6 +23,8 @@ module BlockGraph
           colored[n]
         end
 
+        # @param[Bitcoin::Tx] tx The transaction translate BlockGraph::OpenAssets::Model::ColoredOutput.
+        # @return[Array[BlockGraph::OpenAssets::Model::ColoredOutput]] Return array of the color outputs.
         def get_colored_outputs(tx)
           unless tx.coinbase_tx?
             tx.outputs.each_with_index do |out, i|
