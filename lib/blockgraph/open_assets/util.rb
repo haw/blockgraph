@@ -62,12 +62,6 @@ module BlockGraph
             value = outputs[i].value
             script = outputs[i].script_pubkey
             if i < asset_quantities.length && asset_quantities[i] > 0
-              # payload = marker_output.script_pubkey.op_return_data
-              # metadata = ::OpenAssets::Payload.parse_from_payload(payload).metadata
-              # if (metadata.nil? || metadata.length == 0) && prev_outs[0].script.p2sh?
-              #   metadata = parse_issuance_p2sh_pointer(tx.inputs[0].script_sig.to_payload)
-              # end
-              # metadata = '' unless metadata
               output = BlockGraph::OpenAssets::Model::ColoredOutput.new(value, script, issuance_asset_id, asset_quantities[i], BlockGraph::Constants::OutputType::ISSUANCE)
             else
               output = BlockGraph::OpenAssets::Model::ColoredOutput.new(value, script, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)
