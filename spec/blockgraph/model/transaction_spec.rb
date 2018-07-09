@@ -75,9 +75,7 @@ RSpec.describe BlockGraph::Model::Transaction do
     let(:prev_tx){ Bitcoin::Tx.parse_from_payload("0200000001681c7decdae8ed79d74a8dc687c597c01c11f61dc3e2bbd76fa97f7f5670a979000000006b4830450221008b0f3c2fd4b34d166fd7856b018464ae79d53d737e302a3bf3552c49170d2f76022002fb451cab4aae5af821e1788289ab6a7550361b95371c9582f05a4b042bebd00121033610b0c607af43d423a535edddd549860c84341a65050f624c3da829988199d4feffffff0240420f00000000001976a914fa66cdd02c487d2df74b90bc082606027594e50d88ac499b6105000000001976a9142ff7ef995ba254c0c65b6bfdcf6198f590f4ef5b88ac7c2b1400".htb) }
 
     before do
-      allow(BlockGraph::OpenAssets::Util).to receive(:find_tx).and_return(double('Util find tx', txid: prev_tx.txid))
-      allow(BlockGraph::OpenAssets::Util).to receive(:to_payload).and_return(double('Util payload'))
-      allow(BlockGraph::OpenAssets::Util).to receive(:to_bitcoin_tx).and_return(prev_tx)
+      BlockGraph::Model::Transaction.create_from_tx(prev_tx, 0)
       @openassets_tx = BlockGraph::Model::Transaction.create_from_tx(openassets_tx, 0)
       colored_outputs = BlockGraph::OpenAssets::Util.get_colored_outputs(openassets_tx)
       @openassets_tx.outputs.each do |out|
