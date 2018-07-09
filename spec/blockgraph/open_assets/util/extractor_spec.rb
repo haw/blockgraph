@@ -33,19 +33,23 @@ RSpec.describe BlockGraph::OpenAssets::Util::Extractor do
         outputs.flatten!
       }
 
+      before do
+        @oa = BlockGraph::OpenAssets::Util::Extractor.new
+      end
+
       it 'should export csv in $NEO4J_HOME' do
-        BlockGraph::OpenAssets::Util::Extractor.export_asset_ids(@txes)
-        expect(File.exists?(File.join(neo4j_dir, "open_assets00000.csv"))).to be_truthy
+        @oa.export_asset_ids(@txes)
+        expect(File.exists?(File.join(neo4j_dir, "open_assets.csv"))).to be_truthy
       end
 
       it 'should be same value in csv' do
-        BlockGraph::OpenAssets::Util::Extractor.export_asset_ids(@txes)
-        CSV.read(File.join(neo4j_dir, "open_assets00000.csv"), headers: true).each_with_index do |row, i|
+        @oa.export_asset_ids(@txes)
+        CSV.read(File.join(neo4j_dir, "open_assets.csv"), headers: true).each_with_index do |row, i|
           expect(row[1].to_i).to eq outputs[i].asset_quantity
           expect(row[2].to_i).to eq outputs[i].output_type
         end
 
-        CSV.read(File.join(neo4j_dir, "open_assets00000_rel.csv"), headers: true).each_with_index do |row, i|
+        CSV.read(File.join(neo4j_dir, "open_assets_rel.csv"), headers: true).each_with_index do |row, i|
           expect(row[1]).to eq outputs[i].asset_id.to_s
         end
       end
