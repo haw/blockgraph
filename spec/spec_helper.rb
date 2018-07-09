@@ -31,6 +31,7 @@ RSpec.configure do |config|
       BlockGraph.configuration
       neo4j_session
       Neo4j::ActiveBase.current_session.query('MATCH(n) DETACH DELETE n')
+      BlockGraph::OpenAssets::Util.cache.delete_all
     end
   end
 
@@ -52,6 +53,7 @@ RSpec.configure do |config|
       end
     else
       Neo4j::ActiveBase.current_session.query('MATCH(n) DETACH DELETE n')
+      BlockGraph::OpenAssets::Util.cache.delete_all
     end
   end
 

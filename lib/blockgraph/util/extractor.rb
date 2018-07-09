@@ -71,7 +71,7 @@ module BlockGraph
               in_rel << [in_uuid, tx_uuid]
             end
 
-            outputs = BlockGraph::OpenAssets::Util.to_color_outputs(Bitcoin::Tx.parse_from_payload(tx.to_payload))
+            outputs = BlockGraph::OpenAssets::Util.to_colored_outputs(Bitcoin::Tx.parse_from_payload(tx.to_payload))
             outputs.each_with_index do |tx_out, n|
               out_uuid = SecureRandom.uuid
               if tx_out.script_pubkey.present? && tx_out.script_pubkey.to_hex.size > 2097152

@@ -9,6 +9,8 @@ module BlockGraph
       OA_VERSION_BYTE_TESTNET = 115
 
       class << self
+        @@cache = BlockGraph::OpenAssets::Cache::ColoredOutput.new
+
         # @param[String] txid The transaction id is used by finding from DB.
         # @param[Integer] output_index The index is specify index of transaction output.
         # @return[Array[BlockGraph::OpenAssets::Model::ColoredOutput]] Return the color output translated uncolored output.
@@ -35,16 +37,28 @@ module BlockGraph
           tx.outputs.map{|out| BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)}
         end
 
-        def to_color_outputs(tx)
+        def get_colored_output(txid, n)
+          colored = @@cache.get_output(txid, n)
+          return colored unless colored.blank?
+          tx = BlockGraph::Model::Transaction.find_by(txid: txid)
+          return unless tx
+          colored = get_colored_outputs(to_bitcoin_tx(to_payload(tx)))
+          colored[n]
+        end
+
+        def get_colored_outputs(tx)
           unless tx.coinbase_tx?
-            i = tx.outputs.index{|out| out.script_pubkey.op_return_data.present?}
-            colored = []
-            marker_output = ::OpenAssets::Payload.parse_from_payload(tx.outputs[i].script_pubkey.op_return_data) if i
-            unless marker_output.nil?
-              (0...i).each {|j| colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, marker_output.quantities[j], BlockGraph::Constants::OutputType::ISSUANCE)}
-              colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::MARKER_OUTPUT)
-              ((i + 1)...tx.outputs.size).each {|j| colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, marker_output.quantities[j-1], BlockGraph::Constants::OutputType::TRANSFER)}
-              return colored
+            tx.outputs.each_with_index do |out, i|
+              marker_output_payload = out.script_pubkey.op_return_data
+              unless marker_output_payload.nil?
+                marker_output = ::OpenAssets::Payload.parse_from_payload(marker_output_payload)
+                prev_outs = tx.inputs.map{|input| get_colored_output(input.out_point.txid, input.out_point.index)}
+                outputs = compute_asset_ids(prev_outs, i, tx, marker_output.quantities)
+                unless outputs.nil?
+                  @@cache.put(tx.txid, outputs)
+                  return outputs
+                end
+              end
             end
           end
           tx.outputs.map{|out| BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)}
@@ -57,7 +71,7 @@ module BlockGraph
         # @return[Array[BlockGraph::OpenAssets::Model::ColoredOutput]] Return array of the color outputs.
         def compute_asset_ids(prev_outs, marker_output_index, tx, asset_quantities)
           outputs = tx.outputs
-          return nil if asset_quantities.length > outputs.length - 1 || prev_outs.length == 0
+          return nil if asset_quantities.length > outputs.length - 1 || prev_outs.length == 0 || prev_outs[0].nil?
           result = []
 
           marker_output = outputs[marker_output_index]
@@ -69,15 +83,15 @@ module BlockGraph
             value = outputs[i].value
             script = outputs[i].script_pubkey
             if i < asset_quantities.length && asset_quantities[i] > 0
-              payload = marker_output.script_pubkey.op_return_data
-              metadata = ::OpenAssets::Payload.parse_from_payload(payload).metadata
-              if (metadata.nil? || metadata.length == 0) && prev_outs[0].script.p2sh?
-                metadata = parse_issuance_p2sh_pointer(tx.inputs[0].script_sig.to_payload)
-              end
-              metadata = '' unless metadata
-              output = BlockGraph::OpenAssets::Model::ColoredOutput.new(value, script, issuance_asset_id, asset_quantities[i], BlockGraph::Constants::OutputType::ISSUANCE, metadata)
+              # payload = marker_output.script_pubkey.op_return_data
+              # metadata = ::OpenAssets::Payload.parse_from_payload(payload).metadata
+              # if (metadata.nil? || metadata.length == 0) && prev_outs[0].script.p2sh?
+              #   metadata = parse_issuance_p2sh_pointer(tx.inputs[0].script_sig.to_payload)
+              # end
+              # metadata = '' unless metadata
+              output = BlockGraph::OpenAssets::Model::ColoredOutput.new(value, script, issuance_asset_id, asset_quantities[i], BlockGraph::Constants::OutputType::ISSUANCE)
             else
-              output = BlockGraph::OpenAssets::Model::ColoredOutput.new(value, script, nil, 0, BlockGraph::Constants::OutputType::ISSUANCE)
+              output = BlockGraph::OpenAssets::Model::ColoredOutput.new(value, script, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)
             end
             result << output
           end
@@ -129,10 +143,48 @@ module BlockGraph
                 end
               end
             end
-            result << BlockGraph::OpenAssets::Model::ColoredOutput.new(outputs[i].value, outputs[i].script_pubkey,
-                                                         asset_id, output_asset_quantity, BlockGraph::Constants::OutputType::TRANSFER, metadata)
+
+            if output_asset_quantity == 0
+              result << BlockGraph::OpenAssets::Model::ColoredOutput.new(outputs[i].value, outputs[i].script_pubkey,
+                                                                         asset_id, output_asset_quantity, BlockGraph::Constants::OutputType::UNCOLORED, metadata)
+            else
+              result << BlockGraph::OpenAssets::Model::ColoredOutput.new(outputs[i].value, outputs[i].script_pubkey,
+                                                                         asset_id, output_asset_quantity, BlockGraph::Constants::OutputType::TRANSFER, metadata)
+            end
           end
           result
+        end
+
+        def to_colored_outputs(tx)
+          unless tx.coinbase_tx?
+            i = tx.outputs.index{|out| !out.script_pubkey.op_return_data.nil?}
+            colored = []
+            marker_output = ::OpenAssets::Payload.parse_from_payload(tx.outputs[i].script_pubkey.op_return_data) if i
+            unless marker_output.nil?
+              (0...i).each {|j|
+                if j < marker_output.quantities.length && marker_output.quantities[j] > 0
+                  colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, marker_output.quantities[j], BlockGraph::Constants::OutputType::ISSUANCE)
+                else
+                  colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)
+                end
+              }
+              colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[i].value, tx.outputs[i].script_pubkey, nil, 0, BlockGraph::Constants::OutputType::MARKER_OUTPUT)
+              ((i + 1)...tx.outputs.size).each {|j|
+                asset_quantity = (j <= marker_output.quantities.length ? marker_output.quantities[j-1] : 0)
+                if asset_quantity > 0
+                  colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, asset_quantity, BlockGraph::Constants::OutputType::TRANSFER)
+                else
+                  colored << BlockGraph::OpenAssets::Model::ColoredOutput.new(tx.outputs[j].value, tx.outputs[j].script_pubkey, nil, asset_quantity, BlockGraph::Constants::OutputType::UNCOLORED)
+                end
+              }
+              return colored
+            end
+          end
+          tx.outputs.map{|out| BlockGraph::OpenAssets::Model::ColoredOutput.new(out.value, out.script_pubkey, nil, 0, BlockGraph::Constants::OutputType::UNCOLORED)}
+        end
+
+        def cache
+          @@cache
         end
 
         # parse issuance p2sh which contains asset definition pointer

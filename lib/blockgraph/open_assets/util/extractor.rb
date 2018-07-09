@@ -11,9 +11,9 @@ module BlockGraph
         end
 
         def export_asset_ids(txs)
-          csv = oa.to_csv(txs)
+          nodes, rels = oa.to_csv(txs)
           puts "export begin #{Time.current}"
-          oa.export(csv)
+          oa.export(nodes, rels)
           puts "export end #{Time.current}"
         end
 
