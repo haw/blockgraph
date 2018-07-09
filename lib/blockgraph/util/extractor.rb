@@ -60,14 +60,14 @@ module BlockGraph
                         block.size, block.height, block.tx_count, block.input_count, block.output_count, block.file_num, block.file_pos]
           block_rel = [block.block_hash, block.header.prev_hash]
 
-          block.transactions.each do |tx|
+          block.transactions.each_with_index do |tx, i|
             tx_uuid = SecureRandom.uuid
-            tx_node << [tx_uuid, tx.txid, tx.version, tx.marker, tx.flag, tx.lock_time]
+            tx_node << [tx_uuid, tx.txid, tx.version, tx.marker, tx.flag, tx.lock_time, i]
             tx_rel << [tx.txid, block.block_hash]
 
-            tx.inputs.each do |tx_in|
+            tx.inputs.each_with_index do |tx_in, n|
               in_uuid = SecureRandom.uuid
-              in_node << [in_uuid, tx_in.coinbase? ? '' : tx_in.script_sig.to_hex, tx_in.script_witness.empty? ? '' : tx_in.script_witness.to_s, tx_in.sequence, tx_in.coinbase? ? '' : tx_in.out_point.index, tx_in.coinbase? ? '' : tx_in.out_point.txid]
+              in_node << [in_uuid, tx_in.coinbase? ? '' : tx_in.script_sig.to_hex, tx_in.script_witness.empty? ? '' : tx_in.script_witness.to_s, tx_in.sequence, tx_in.coinbase? ? '' : tx_in.out_point.index, tx_in.coinbase? ? '' : tx_in.out_point.txid, n]
               in_rel << [in_uuid, tx_uuid]
             end
 
