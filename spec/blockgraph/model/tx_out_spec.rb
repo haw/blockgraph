@@ -58,11 +58,23 @@ RSpec.describe BlockGraph::Model::TxOut do
     end
 
     context 'import only node' do
-      it 'should be imported tx nodes by csv' do
+      before do
         BlockGraph::Model::TxOut.import_node(0)
+      end
+
+      it 'should be imported tx nodes by csv' do
         expect(BlockGraph::Model::TxOut.count).to eq 211
         expect(BlockGraph::Model::TxOut.first.transaction).to eq nil
         expect(BlockGraph::Model::TxOut.all.spent_input).to eq nil
+      end
+
+      it 'should set some properties' do
+        out = BlockGraph::Model::TxOut.last
+        expect(out.value).to_not be_blank
+        expect(out.n).to_not be_blank
+        expect(out.script_pubkey).to_not be_blank
+        expect(out.asset_quantity).to_not be_blank
+        expect(out.output_type).to_not be_blank
       end
     end
 
