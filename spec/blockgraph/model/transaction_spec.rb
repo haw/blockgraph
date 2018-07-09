@@ -79,7 +79,7 @@ RSpec.describe BlockGraph::Model::Transaction do
       allow(BlockGraph::OpenAssets::Util).to receive(:to_payload).and_return(double('Util payload'))
       allow(BlockGraph::OpenAssets::Util).to receive(:to_bitcoin_tx).and_return(prev_tx)
       @openassets_tx = BlockGraph::Model::Transaction.create_from_tx(openassets_tx, 0)
-      colored_outputs = BlockGraph::OpenAssets::Util.get_color_outputs_from_tx(openassets_tx)
+      colored_outputs = BlockGraph::OpenAssets::Util.get_colored_outputs(openassets_tx)
       @openassets_tx.outputs.each do |out|
         oa_out = colored_outputs.find(nil){|colored| colored.script.to_hex == out.script_pubkey }
         out.apply_oa_attributes(oa_out) if oa_out

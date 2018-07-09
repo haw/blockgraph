@@ -28,7 +28,7 @@ RSpec.describe BlockGraph::OpenAssets::Util::Extractor do
       let(:outputs) {
         outputs = []
         @txes.each do |tx|
-          outputs << BlockGraph::OpenAssets::Util.get_color_outputs_from_tx(Bitcoin::Tx.parse_from_payload(tx.to_payload))
+          outputs << BlockGraph::OpenAssets::Util.get_colored_outputs(Bitcoin::Tx.parse_from_payload(tx.to_payload))
         end
         outputs.flatten!
       }
