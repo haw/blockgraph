@@ -92,4 +92,23 @@ RSpec.describe BlockGraph::Model::TxOut do
       end
     end
   end
+
+  describe 'addresses' do
+    let(:tx){ Bitcoin::Tx.parse_from_payload("01000000016b472242879ad9b16b021f4eec60bb77a3d37ff373c0c9b2d6df3a303a198b1b000000006a47304402204e9e2fa9b258a13b815b527bcc95a49f1bc85e2782eda3b640b0b1bb3f0f187502203e48358d3616f8589858732da32b14b25beb8a9d4033462c915b221b8d971105012102726d81fa11f16aaaecaf560ee7a6f12772385c567af1978e4bffef339264d1f3ffffffff05b8020e00000000001976a914fa66cdd02c487d2df74b90bc082606027594e50d88ac78500000000000001976a91413bf31e7504658854a2eeb26dce7e81765a8225f88ac78500000000000001976a9143af55380c66112c4d7e8cdc2ecc208ed09dbe8da88ac78500000000000001976a91464bf38d4f93c3353b2acdcc3580238ffbd53d05c88ac0000000000000000676a4c644f41010004000101015a753d68747470733a2f2f636f6e677265636861696e2d736161732d64656d6f2e73332d61702d6e6f727468656173742d312e616d617a6f6e6177732e636f6d2f70726f64756374696f6e2f70726f6a6563742f32342e6a736f6e00000000".htb) }
+
+    before do
+      BlockGraph::Model::Transaction.create_from_tx(tx, 0)
+      Bitcoin.chain_params = :regtest
+    end
+
+    it 'should return bitcoin addresses' do
+      outputs = BlockGraph::Model::Transaction.find_by(txid: tx.txid).outputs.order(n: :asc)
+
+      expect(outputs[0].addresses).to eq ({address: ['n4LxNxPg2an9nZGDBYeqtMjnLTYi9zNKoZ']})
+      expect(outputs[1].addresses).to eq ({address: ['mhKNB9zUH1gao8skwRBxyiFuW5aWAo6XWG']})
+      expect(outputs[2].addresses).to eq ({address: ['mkthNk1D28HXLA4pQ7QAGy4iJaU54HKfQo']})
+      expect(outputs[3].addresses).to eq ({address: ['mphewaGy5szgoM56Bz6YBAKMsNYFMUkEVj']})
+      expect(outputs[4].addresses).to eq ({address: []})
+    end
+  end
 end

@@ -132,6 +132,10 @@ module BlockGraph
         script.type
       end
 
+      def addresses
+        script = Bitcoin::Script.parse_from_payload(self.script_pubkey.htb)
+        {address: script.addresses}
+      end
     end
   end
 end
