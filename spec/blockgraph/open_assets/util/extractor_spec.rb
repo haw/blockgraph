@@ -46,7 +46,7 @@ RSpec.describe BlockGraph::OpenAssets::Util::Extractor do
         @oa.export_asset_ids(@txes)
         CSV.read(File.join(neo4j_dir, "open_assets.csv"), headers: true).each_with_index do |row, i|
           expect(row[1].to_i).to eq outputs[i].asset_quantity
-          expect(row[2].to_i).to eq outputs[i].output_type
+          expect(row[2].to_i).to eq outputs[i].oa_output_type
         end
 
         CSV.read(File.join(neo4j_dir, "open_assets_rel.csv"), headers: true).each_with_index do |row, i|

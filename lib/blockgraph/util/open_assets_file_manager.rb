@@ -43,7 +43,7 @@ module BlockGraph
           btc_tx = Bitcoin::Tx.parse_from_payload(tx.to_payload)
           outputs = BlockGraph::OpenAssets::Util.get_colored_outputs(btc_tx)
           outputs.each_with_index do |tx_out, n|
-            nodes << [tx_outs[n].uuid, tx_out.asset_quantity, tx_out.output_type]
+            nodes << [tx_outs[n].uuid, tx_out.asset_quantity, tx_out.oa_output_type]
             rels << [tx_outs[n].uuid, tx_out.asset_id]
           end
           print "\rdata formated #{sprintf("%3.1f", ((i+1) / total.to_f) * 100)}%"

@@ -74,7 +74,7 @@ RSpec.describe BlockGraph::Model::TxOut do
         expect(out.n).to_not be_blank
         expect(out.script_pubkey).to_not be_blank
         expect(out.asset_quantity).to_not be_blank
-        expect(out.output_type).to_not be_blank
+        expect(out.oa_output_type).to_not be_blank
       end
     end
 

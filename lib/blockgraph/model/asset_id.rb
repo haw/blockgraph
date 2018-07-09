@@ -21,9 +21,9 @@ module BlockGraph
 
       def self.update
         puts "asset ids associate to tx out #{Time.current}"
-        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///open_assets.csv' AS row WITH row.tx_out_uuid AS uuid, row.asset_quantity AS asset_quantity, row.output_type AS output_type
+        self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///open_assets.csv' AS row WITH row.tx_out_uuid AS uuid, row.asset_quantity AS asset_quantity, row.oa_output_type AS output_type
                           MERGE (out:`BlockGraph::Model::TxOut`:`BlockGraph::Model::ActiveNodeBase` {uuid: uuid})
-                          ON MATCH SET out.asset_quantity = toInteger(asset_quantity), out.output_type = toInteger(output_type)
+                          ON MATCH SET out.asset_quantity = toInteger(asset_quantity), out.oa_output_type = toInteger(output_type)
                         ")
         self.neo4j_query("USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM 'file:///open_assets_rel.csv' AS row WITH row.tx_out_uuid AS uuid, row.asset_id AS asset_id
                           WHERE NOT asset_id = ''

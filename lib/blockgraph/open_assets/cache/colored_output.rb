@@ -47,7 +47,7 @@ module BlockGraph
           begin
             db.transaction do
               outputs.each_with_index do |out, n|
-                db.execute('REPLACE INTO colored_outputs (txid, n, value, script, asset_id, asset_quantity, output_type) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, n, out.value, out.script.to_payload, out.asset_id, out.asset_quantity, out.output_type])
+                db.execute('REPLACE INTO colored_outputs (txid, n, value, script, asset_id, asset_quantity, output_type) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, n, out.value, out.script.to_payload, out.asset_id, out.asset_quantity, out.oa_output_type])
               end
             end
           rescue SQLite3::ConstraintException => e

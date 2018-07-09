@@ -7,7 +7,7 @@ module BlockGraph
         attr_accessor :script
         attr_accessor :asset_id
         attr_accessor :asset_quantity
-        attr_accessor :output_type
+        attr_accessor :oa_output_type
 
         attr_accessor :account
         attr_accessor :metadata
@@ -23,7 +23,7 @@ module BlockGraph
           @script = script
           @asset_id = asset_id
           @asset_quantity = asset_quantity
-          @output_type = output_type
+          @oa_output_type = output_type
           @metadata = metadata
           load_asset_definition_url
         end

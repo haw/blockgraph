@@ -75,9 +75,9 @@ module BlockGraph
             outputs.each_with_index do |tx_out, n|
               out_uuid = SecureRandom.uuid
               if tx_out.script_pubkey.present? && tx_out.script_pubkey.to_hex.size > 2097152
-                out_large_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.to_hex, tx_out.asset_quantity, tx_out.output_type]
+                out_large_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.to_hex, tx_out.asset_quantity, tx_out.oa_output_type]
               else
-                out_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.present? ? tx_out.script_pubkey.to_hex : '', tx_out.asset_quantity, tx_out.output_type]
+                out_node << [out_uuid, tx_out.value, n, tx_out.script_pubkey.present? ? tx_out.script_pubkey.to_hex : '', tx_out.asset_quantity, tx_out.oa_output_type]
               end
               out_rel << [out_uuid, tx_uuid]
             end

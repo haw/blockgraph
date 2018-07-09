@@ -96,7 +96,7 @@ RSpec.describe BlockGraph::OpenAssets::Util do
           outputs = BlockGraph::OpenAssets::Util.to_colored_outputs(Bitcoin::Tx.parse_from_payload(tx.to_payload))
           outputs.each_with_index do |tx_out, n|
             tx_outs[n].asset_quantity = tx_out.asset_quantity
-            tx_outs[n].output_type = tx_out.output_type
+            tx_outs[n].oa_output_type = tx_out.oa_output_type
             tx_outs[n].save!
           end
         end
@@ -105,10 +105,10 @@ RSpec.describe BlockGraph::OpenAssets::Util do
       it 'should return colored output with asset id' do
         outputs = BlockGraph::OpenAssets::Util.get_colored_outputs(next_tx)
         expect(outputs[0].asset_id).to eq nil # marker output
-        expect(outputs[0].output_type).to eq BlockGraph::Constants::OutputType::MARKER_OUTPUT
+        expect(outputs[0].oa_output_type).to eq BlockGraph::Constants::OutputType::MARKER_OUTPUT
         (1...outputs.size).each do |i|
           expect(outputs[i].asset_id).to eq "oZ6NmQgn8i3uF6VcmWVJgjT3qtGVyd7nci"
-          expect(outputs[i].output_type).to eq BlockGraph::Constants::OutputType::TRANSFER
+          expect(outputs[i].oa_output_type).to eq BlockGraph::Constants::OutputType::TRANSFER
         end
       end
 
