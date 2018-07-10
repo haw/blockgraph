@@ -109,7 +109,7 @@ module BlockGraph
     end
 
     def update_asset_ids
-      BlockGraph::Model::TxOut.where(output_type: [2, 3]).transaction.query_as(:n).return("DISTINCT n").find_in_batches(:n, :uuid, batch_size: 10000) do |batch|
+      BlockGraph::Model::TxOut.where(oa_output_type: [2, 3]).transaction.query_as(:n).return("DISTINCT n").find_in_batches(:n, :uuid, batch_size: 10000) do |batch|
         txs = batch.map(&:n)
         oa_extr = BlockGraph::OpenAssets::Util::Extractor.new
         oa_extr.export_asset_ids(txs)
