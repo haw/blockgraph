@@ -60,6 +60,7 @@ $ rake neo4j:generate_schema_migration[index,BlockGraph::Model::BlockHeader,heig
 $ rake neo4j:generate_schema_migration[index,BlockGraph::Model::BlockHeader,block_hash]
 $ rake neo4j:generate_schema_migration[index,BlockGraph::Model::Transaction,txid]
 $ rake neo4j:generate_schema_migration[index,BlockGraph::Model::AssetId,asset_id]
+$ rake neo4j:generate_schema_migration[index,BlockGraph::Model::TxOut,oa_output_type]
 ```
 
 ### migrate database
