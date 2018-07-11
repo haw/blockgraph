@@ -67,7 +67,7 @@ module BlockGraph
 
             tx.inputs.each_with_index do |tx_in, n|
               in_uuid = SecureRandom.uuid
-              in_node << [in_uuid, tx_in.coinbase? ? '' : tx_in.script_sig.to_hex, tx_in.script_witness.empty? ? '' : tx_in.script_witness.to_s, tx_in.sequence, tx_in.coinbase? ? '' : tx_in.out_point.index, tx_in.coinbase? ? '' : tx_in.out_point.txid, n]
+              in_node << [in_uuid, tx_in.script_sig.to_hex, tx_in.script_witness.empty? ? '' : tx_in.script_witness.to_s, tx_in.sequence, tx_in.coinbase? ? '' : tx_in.out_point.index, tx_in.coinbase? ? '' : tx_in.out_point.txid, n]
               in_rel << [in_uuid, tx_uuid]
             end
 
