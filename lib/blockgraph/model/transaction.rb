@@ -141,6 +141,10 @@ module BlockGraph
         false
       end
 
+      def coinbase_tx?
+        self.inputs.length == 1 && self.inputs.order(index: :asc)[0].coinbase?
+      end
+
     end
   end
 end
