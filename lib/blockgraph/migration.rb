@@ -62,6 +62,8 @@ module BlockGraph
           extr = BlockGraph::Util::Extractor.new
           extr.export(blocks)
           import_with_relation(max_csv_file_num("block"))
+          update_height
+          update_asset_ids
         rescue BlockGraph::Parser::Error => e
           if e.message == '{"code"=>-8, "message"=>"Block height out of range"}'
             puts "All blocks export finished"
