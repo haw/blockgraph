@@ -35,7 +35,7 @@ module BlockGraph
       end
 
       def issuance_txs
-        outputs.select{|o| o.oa_output_type == 'issuance'}.map(&:transaction)
+        outputs.select{|o| BlockGraph::Constants::OutputType.output_type_label(o.oa_output_type) == 'issuance'}.map(&:transaction)
             .uniq{|tx| tx.txid}.sort{|a, b| b.block.time <=> a.block.time}
       end
     end
