@@ -34,14 +34,14 @@ module BlockGraph
         header = Bitcoin::BlockHeader.parse_from_payload(buf.read(80))
         tx_in = tx_out = 0
         tx_count = Bitcoin.unpack_var_int_from_io(buf)
-        txes = []
+        txs = []
         tx_count.times do
-          txes << Bitcoin::Tx.parse_from_payload(buf)
-          tx_in += txes[-1].inputs.size
-          tx_out += txes[-1].outputs.size
+          txs << Bitcoin::Tx.parse_from_payload(buf)
+          tx_in += txs[-1].inputs.size
+          tx_out += txs[-1].outputs.size
         end
         tx_in -= 1 # remove coinbase
-        self.new(header, size, txes, tx_count, tx_in, tx_out, file_num, file_pos)
+        self.new(header, size, txs, tx_count, tx_in, tx_out, file_num, file_pos)
       end
 
       def to_payload
