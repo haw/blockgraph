@@ -8,6 +8,49 @@ RSpec.describe BlockGraph::Parser::ChainIndex do
     end
   end
 
+  describe '#reorg_blocks' do
+    context 'start genesis block' do
+      subject {
+        index = BlockGraph::Parser::ChainIndex.new(test_configuration)
+        index.update
+        index
+      }
+
+      it 'should have height' do
+        subject.reorg_blocks
+        subject.block_list.values.sort_by{|b| b.height}.each_with_index do |b, i|
+          expect(b.height).to eq i
+        end
+      end
+    end
+
+    context 'start not genesis block' do
+      before do
+        index = BlockGraph::Parser::ChainIndex.new(test_configuration)
+        index.update
+        index.reorg_blocks
+        index.blocks_to_add[0..1].each do |block|
+          BlockGraph::Model::BlockHeader.create_from_blocks(block)
+        end
+      end
+
+      subject{
+        index = BlockGraph::Parser::ChainIndex.parse_from_neo4j(test_configuration)
+        index.update
+        index
+      }
+
+      it 'should have height' do
+        subject.reorg_blocks
+        subject.block_list.values.sort_by{|b| b.height}.each_with_index do |b, i|
+          expect(b.height).to eq (i + 2)
+        end
+      end
+
+    end
+
+  end
+
   describe '#update' do
     context 'load file' do
       subject {

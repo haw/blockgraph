@@ -153,15 +153,16 @@ module BlockGraph
 
         puts 'calculate block height.'
 
-        queue = block_list.values.select{|b| b.height.present?}
+        genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
 
-        if queue.blank?
-          genesis_hash = Bitcoin.chain_params.genesis_block.header.hash
+        if block_list[genesis_hash].present?
           block_list[genesis_hash].height = 0
 
           queue = [[genesis_hash, 0]]
         else
-          queue.map!{|b| [b.header.prev_hash, b.height]}
+          have_height_queue = block_list.values.select{|b| b.height.present?}
+          have_height_queue.map!{|b| [b.header.prev_hash, b.height]}
+          queue = [have_height_queue.max{|a, b| a[1] <=> b[1]}]
         end
 
         until queue.empty?
