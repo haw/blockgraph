@@ -10,3 +10,4 @@ blockgraph:
     basic_auth:
       username: 'neo4j'
       password: 'password'
+    environment: 'test'

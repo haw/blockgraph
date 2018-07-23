@@ -5,6 +5,7 @@ module BlockGraph
   class Migration
 
     attr_reader :sleep_interval
+    attr_reader :neo4j_env
     attr_reader :parser
 
     def initialize(config)
@@ -17,6 +18,7 @@ module BlockGraph
       neo4j_adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(config[:neo4j][:server], neo4j_config)
       Neo4j::ActiveBase.on_establish_session { Neo4j::Core::CypherSession.new(neo4j_adaptor) }
       @sleep_interval = config[:bitcoin][:sleep_interval].nil? ? 600 :  config[:bitcoin][:sleep_interval].to_i
+      @neo4j_env = config[:neo4j][:environment]
 
       BlockGraph::Model.constants.each {|const_name| BlockGraph::Model.const_get(const_name)}
     end
@@ -63,6 +65,8 @@ module BlockGraph
           extr.export(blocks)
           import_with_relation(max_csv_file_num("block"))
           update_asset_ids
+          system("bundle exec rake neo4j:restart[#{neo4j_env}]")
+          sleep 10
         rescue BlockGraph::Parser::Error => e
           if e.message == '{"code"=>-8, "message"=>"Block height out of range"}'
             update_height
